@@ -3,8 +3,11 @@
 const localVideo = document.querySelector('#localvideo');
 const remoteVideo = document.querySelector('#remotevideo');
 const shareButton = document.querySelector('#shareButton');
-const connectButton = document.querySelector('#connectButton');
+const createButton = document.querySelector('#createButton');
+const joinButton = document.querySelector('#joinButton');
 const disconnectButton = document.querySelector('#disconnectButton');
+const roomId = document.querySelector('#roomId');
+const roomInfo = document.querySelector('#roomInfo');
 
 const configuration = {
     iceServers: [
@@ -33,20 +36,7 @@ function handleError(error) {
     errorMsg(`error: ${error.name}`, error);
 }
 
-let localPeerConnection;
-let remotePeerConnection;
-const offerOptions = {
-    offerToReceiveAudio: 1,
-    offerToReceiveVideo: 1
-};
-
-function getName(pc) {
-    return (pc === localPeerConnection) ? 'localPeerConnection' : 'remotePeerConnection';
-}
-
-function getOtherPc(pc) {
-    return (pc === localPeerConnection) ? remotePeerConnection : localPeerConnection;
-}
+let peerConnection;
 
 async function onIceCandidate(pc, event) {
     try {
@@ -63,90 +53,163 @@ function onIceStateChange(pc, event) {
     }
 }
 
-function gotRemoteStream(event) {
-    if (remoteVideo.srcObject !== event.streams[0]) {
-        remoteStream = event.streams[0];
-        remoteVideo.srcObject = event.streams[0];
-    }
-}
-
-async function onCreateOfferSuccess(desc) {
-    console.log(`Offer from localPeerConnection\n${desc.sdp}`);
-    console.log('localPeerConnection setLocalDescription start');
-    try {
-        await localPeerConnection.setLocalDescription(desc);
-    } catch (e) {
-        handleError(e);
-    }
-    console.log('remotePeerConnection setRemoteDescription start');
-    try {
-        await remotePeerConnection.setRemoteDescription(desc);
-    } catch (e) {
-        handleError(e);
-    }
-    console.log('remotePeerConnection createAnswer start');
-    // Since the 'remote' side has no media stream we need
-    // to pass in the right constraints in order for it to
-    // accept the incoming offer of audio and video.
-    try {
-        const answer = await remotePeerConnection.createAnswer();
-        await onCreateAnswerSuccess(answer);
-    } catch (e) {
-        handleError(e);
-    }
-}
-
-async function onCreateAnswerSuccess(desc) {
-    console.log(`Answer from remotePeerConnection:\n${desc.sdp}`);
-    console.log('remotePeerConnection setLocalDescription start');
-    try {
-        await remotePeerConnection.setLocalDescription(desc);
-    } catch (e) {
-        handleError(e);
-    }
-    console.log('localPeerConnection setRemoteDescription start');
-    try {
-        await localPeerConnection.setRemoteDescription(desc);
-    } catch (e) {
-        handleError(e);
-    }
-}
-
 function hangup() {
     console.log('Ending call');
-    localPeerConnection.close();
-    remotePeerConnection.close();
-    localPeerConnection = null;
-    remotePeerConnection = null;
+    const tracks = localVideo.srcObject.getTracks();
+    tracks.forEach(track => {
+        track.stop();
+    });
+    if (remoteStream) {
+        remoteStream.getTracks().forEach(track => track.stop());
+    }
+    if (peerConnection) {
+        peerConnection.close();
+    }
+    localVideo.srcObject = null;
+    remoteVideo.srcObject = null;
+    shareButton.disabled = false;
+    roomInfo.innerHTML = '';
+    createButton.disabled = false;
+    joinButton.disabled = false;
     disconnectButton.disabled = true;
-    connectButton.disabled = false;
 }
 
-async function call() {
-    connectButton.disabled = true;
+function registerPeerConnectionListeners() {
+    peerConnection.addEventListener('icegatheringstatechange', () => {
+        console.log(
+          `ICE gathering state changed: ${peerConnection.iceGatheringState}`);
+    });
+  
+    peerConnection.addEventListener('connectionstatechange', () => {
+        console.log(`Connection state change: ${peerConnection.connectionState}`);
+    });
+  
+    peerConnection.addEventListener('signalingstatechange', () => {
+        console.log(`Signaling state change: ${peerConnection.signalingState}`);
+    });
+  
+    peerConnection.addEventListener('iceconnectionstatechange ', () => {
+        console.log(
+          `ICE connection state change: ${peerConnection.iceConnectionState}`);
+    });
+}
+
+async function createRoom() {
+    createButton.disabled = true;
     disconnectButton.disabled = false;
-    localPeerConnection = new RTCPeerConnection(configuration);
-    localPeerConnection.addEventListener('icecandidate', e => onIceCandidate(localPeerConnection, e));
-    remotePeerConnection = new RTCPeerConnection(configuration);
-    remotePeerConnection.addEventListener('icecandidate', e => onIceCandidate(remotePeerConnection, e));
-    localPeerConnection.addEventListener('iceconnectionstatechange', e => onIceStateChange(localPeerConnection, e));
-    remotePeerConnection.addEventListener('iceconnectionstatechange', e => onIceStateChange(remotePeerConnection, e));
-    remotePeerConnection.addEventListener('track', gotRemoteStream);
-    localStream.getTracks().forEach(track => localPeerConnection.addTrack(track, localStream));
-    try {
-        const offer = await localPeerConnection.createOffer(offerOptions);
-        await onCreateOfferSuccess(offer);
-    } catch (e) {
-        handleError(e);
+    const db = firebase.firestore();
+    const roomRef = await db.collection('rooms').doc();
+    peerConnection = new RTCPeerConnection(configuration);
+    registerPeerConnectionListeners();
+    localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+    });
+    const callerCandidatesCollection = roomRef.collection('callerCandidates');
+    peerConnection.addEventListener('icecandidate', event => {
+        if (!event.candidate) {
+            console.log('Got final candidate!');
+            return;
+        }
+        console.log('Got candidate: ', event.candidate);
+        callerCandidatesCollection.add(event.candidate.toJSON());
+    });
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    console.log('Created offer: ', offer);
+    const roomWithOffer = {
+        'offer': {
+            type: offer.type,
+            sdp: offer.sdp,
+        },
+    };
+    await roomRef.set(roomWithOffer);
+    roomId = roomRef.id;
+    console.log(`New room created with SDP offer. ROom ID: ${roomRef.id}`);
+    roomInfo.innerHTML = `Current room is ${roomRef.id} - You are the caller!`;
+    peerConnection.addEventListener('track', event=>{
+        console.log('Got remote track:', event.streams[0]);
+        event.streams[0].getTracks().forEach(track => {
+            console.log('Add a track to the remoteStream:', track);
+            remoteStream.addTrack(track);
+        });
+    });
+    roomRef.onSnapshot(async snapshot => {
+        const data = snapshot.data();
+        if (!peerConnection.currentRemoteDescription && data && data.answer) {
+            console.log('Got remote description: ', data.answer);
+            const rtcSessionDescription = new rtcSessionDescription(data.answer);
+            await peerConnection.setRemoteDescription(rtcSessionDescription);
+        }
+    });
+    roomRef.collection('calleeCandidates').onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(async change => {
+            if (change.type == 'added') {
+                let data = change.doc.data();
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+            }
+        });
+    });
+}
+
+function joinRoom() {
+    const db = firebase.firestore();
+    const targetRoom = roomId.value;
+    const roomRef = db.collection('rooms').doc(targetRoom);
+    const roomSnapshot = await roomRef.get();
+    console.log('Got room:', roomSnapshot.exists);
+    if (roomSnapshot.exists) {
+        console.log('Create PeerConnection with configuration: ', configuration);
+        peerConnection = new RTCPeerConnection(configuration);
+        registerPeerConnectionListeners();
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+        });
+        const calleeCandidatesCollection = roomRef.collection('calleeCandidates');
+        peerConnection.addEventListener('icecandidate', event => {
+            if (!event.candidate) {
+                console.log('Got final candidate!');
+                return;
+            }
+            console.log('Got candidate: ', event.candidate);
+            calleeCandidatesCollection.add(event.candidate.toJSON());
+        });
+        peerConnection.addEventListener('track', event => {
+            console.log('Got remote track:', event.streams[0]);
+            event.streams[0].getTracks().forEach(track => {
+                console.log('Add a track to the remoteStream:', track);
+                remoteStream.addTrack(track);
+            });
+        });
+        const offer = roomSnapshot.data().offer;
+        console.log('Got offer:', offer);
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await peerConnection.createAnswer();
+        console.log('Created answer:', answer);
+        await peerConnection.setLocalDescription(answer);
+        const roomWithAnswer = {
+            answer: {
+                type: answer.type,
+                sdp: answer.sdp,
+            },
+        };
+        await roomRef.update(roomWithAnswer);
+        roomRef.collection('callerCandidates').onSnapshot(snapshot => {
+            snapshot.docChanges().forEach(async change => {
+                if (change.type === 'added') {
+                    let data = change.doc.data();
+                    console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+                }
+            });
+        });
     }
 }
-
 function gotDisplayMediaStream(streams) {
     if (localStream) {
         localStream.getTracks().forEach(track => { track.stop(); });
     }
     shareButton.disabled = true;
-    connectButton.disabled = false;
+    createButton.disabled = false;
     localStream = streams; // make stream available to console
     localVideo.srcObject = streams;
     localStream.getVideoTracks()[0].addEventListener('ended', () => {
@@ -161,9 +224,11 @@ function shareScreen() {
 }
 
 function gotUserMediaStream(streams) {
-    connectButton.disabled = false;
+    createButton.disabled = false;
     localStream = streams; // make stream available to console
     localVideo.srcObject = streams;
+    remoteStream = new MediaStream();
+    remoteVideo.srcObject = remoteStream;
 }
 
 function start() {
@@ -181,7 +246,8 @@ function start() {
 function init() {
     start();
     shareButton.addEventListener('click', shareScreen);
-    // connectButton.addEventListener('click', call);
+    createButton.addEventListener('click', createRoom);
+    joinButton.addEventListener('click', joinRoom);
     disconnectButton.addEventListener('click', hangup);
 }
 

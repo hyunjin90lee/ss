@@ -8,18 +8,17 @@
 <body>
   <h1>1. Make local streams visible</h1>
   <button id="shareButton">Share</button>
-  <form>
-    <input type="text" id="room" placeholder="Room">
-    <button id="connectButton" disabled>Connect</button>
-  </form>
+  <button id="createButton" disabled>Create</button>
+  <input type="text" id="roomId">
+  <button id="joinButton" disabled>Join</button>
   <button id="disconnectButton" disabled>Disconnect</button>
   </div>
+  <div id="roomInfo"></div>
   <div id="videos">
     <video id="localvideo" autoplay playsinline muted></video>
     <video id="remotevideo" playsinline autoplay></video>
   </div>
   <div id="errorMsg"></div>
-  <ul id="roomMsg"></ul>
   <!--
   TODO: replace adapter-latest.js
   -->
