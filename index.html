@@ -4,6 +4,29 @@
   <meta charset="utf-8">
   <title>Virtual meetings via SmartScreen</title>
   <link rel="stylesheet" href="css/main.css" />
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase-app.js"></script>
+  <!-- include only the Firebase features as you need -->
+  <script defer src="https://www.gstatic.com/firebasejs/5.9.3/firebase-firestore.js"></script>
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+  <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase-analytics.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    var firebaseConfig = {
+      apiKey: "AIzaSyCFTwm65JNDtypaQRZDvyUG_DxIwntwN70",
+      authDomain: "ss-meeting.firebaseapp.com",
+      projectId: "ss-meeting",
+      storageBucket: "ss-meeting.appspot.com",
+      messagingSenderId: "888308853335",
+      appId: "1:888308853335:web:ca3cdeeebfe2e675485112",
+      measurementId: "G-ZJZ3RS4VFC"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+  </script>
 </head>
 <body>
   <h1>1. Make local streams visible</h1>
@@ -26,27 +49,5 @@
   <script src="/socket.io/socket.io.js"></script> -->
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="js/main.js"></script>
-  <!-- The core Firebase JS SDK is always required and must be listed first -->
-  <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase-app.js"></script>
-
-  <!-- TODO: Add SDKs for Firebase products that you want to use
-     https://firebase.google.com/docs/web/setup#available-libraries -->
-  <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase-analytics.js"></script>
-  <script>
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-    var firebaseConfig = {
-      apiKey: "AIzaSyCFTwm65JNDtypaQRZDvyUG_DxIwntwN70",
-      authDomain: "ss-meeting.firebaseapp.com",
-      projectId: "ss-meeting",
-      storageBucket: "ss-meeting.appspot.com",
-      messagingSenderId: "888308853335",
-      appId: "1:888308853335:web:ca3cdeeebfe2e675485112",
-      measurementId: "G-ZJZ3RS4VFC"
-    };
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    firebase.analytics();
-  </script>
 </body>
 </html>
