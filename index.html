@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Virtual meetings via SmartScreen</title>
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <h1>1. Make local streams visible</h1>
+  <div id="buttons">
+    <button id="shareButton">Share</button>
+    <button id="connectButton" disabled>Connect</button>
+    <button id="disconnectButton" disabled>Disconnect</button>
+  </div>
+  <div id="videos">
+    <video id="localvideo" autoplay playsinline muted></video>
+    <video id="remotevideo" playsinline autoplay></video>
+  </div>
+  <div id="errorMsg"></div>
+  <!--
+  TODO: replace adapter-latest.js
+  -->
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
