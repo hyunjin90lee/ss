@@ -23,35 +23,7 @@ const configuration = {
 
 let localStream;
 let remoteStream;
-
-function errorMsg(msg, error) {
-    const errorElement = document.querySelector('#errorMsg');
-    errorElement.innerHTML += `<p>${msg}</p>`;
-    if (typeof error !== 'undefined') {
-        console.error(error);
-    }
-}
-
-function handleError(error) {
-    errorMsg(`error: ${error.name}`, error);
-}
-
 let peerConnection;
-
-async function onIceCandidate(pc, event) {
-    try {
-        await (getOtherPc(pc).addIceCandidate(event.candidate));
-    } catch (e) {
-        handleError(pc, e);
-	}
-}
-
-function onIceStateChange(pc, event) {
-    if (pc) {
-        console.log(`${getName(pc)} ICE state: ${pc.iceConnectionState}`);
-        console.log('ICE state change event: ', event);
-    }
-}
 
 function hangup() {
     console.log('Ending call');
@@ -220,7 +192,9 @@ function gotDisplayMediaStream(streams) {
 
 function shareScreen() {
     navigator.mediaDevices.getDisplayMedia({video: true})
-    .then(gotDisplayMediaStream, handleError);
+    .then(gotDisplayMediaStream, (error) => {
+        console.log("[Error] failed to share screen: ", error);
+    });
 }
 
 function gotUserMediaStream(streams) {
@@ -240,7 +214,9 @@ function start() {
         audio: true
     };
     navigator.mediaDevices.getUserMedia(constraints)
-        .then(gotUserMediaStream).catch(handleError);
+        .then(gotUserMediaStream).catch((error) => {
+            console.log("[Error] failed to get media: ", error);
+        });
 }
 
 function init() {
