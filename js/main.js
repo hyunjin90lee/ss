@@ -6,7 +6,7 @@ const shareButton = document.querySelector('#shareButton');
 const createButton = document.querySelector('#createButton');
 const joinButton = document.querySelector('#joinButton');
 const disconnectButton = document.querySelector('#disconnectButton');
-const roomId = document.querySelector('#roomId');
+const targetRoom = document.querySelector('#targetRoom');
 const roomInfo = document.querySelector('#roomInfo');
 
 const configuration = {
@@ -24,6 +24,7 @@ const configuration = {
 let localStream;
 let remoteStream;
 let peerConnection;
+let roomId;
 
 function hangup() {
     console.log('Ending call');
