@@ -7,19 +7,24 @@
 </head>
 <body>
   <h1>1. Make local streams visible</h1>
-  <div id="buttons">
-    <button id="shareButton">Share</button>
+  <button id="shareButton">Share</button>
+  <form>
+    <input type="text" id="room" placeholder="Room">
     <button id="connectButton" disabled>Connect</button>
-    <button id="disconnectButton" disabled>Disconnect</button>
+  </form>
+  <button id="disconnectButton" disabled>Disconnect</button>
   </div>
   <div id="videos">
     <video id="localvideo" autoplay playsinline muted></video>
     <video id="remotevideo" playsinline autoplay></video>
   </div>
   <div id="errorMsg"></div>
+  <ul id="roomMsg"></ul>
   <!--
   TODO: replace adapter-latest.js
   -->
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script> -->
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="js/main.js"></script>
 </body>
