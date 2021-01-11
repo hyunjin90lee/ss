@@ -151,7 +151,7 @@ async function createRoom() {
     });
 }
 
-function joinRoom() {
+async function joinRoom() {
     const db = firebase.firestore();
     const targetRoom = roomId.value;
     const roomRef = db.collection('rooms').doc(targetRoom);
