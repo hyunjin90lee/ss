@@ -110,7 +110,7 @@ async function createRoom() {
         const data = snapshot.data();
         if (!peerConnection.currentRemoteDescription && data && data.answer) {
             console.log('Got remote description: ', data.answer);
-            const rtcSessionDescription = new rtcSessionDescription(data.answer);
+            const rtcSessionDescription = new RtcSessionDescription(data.answer);
             await peerConnection.setRemoteDescription(rtcSessionDescription);
         }
     });
