@@ -69,6 +69,7 @@ function registerPeerConnectionListeners() {
 
 async function createRoom() {
     createButton.disabled = true;
+    joinButton.disabled = true;
     disconnectButton.disabled = false;
     const db = firebase.firestore();
     const roomRef = await db.collection('rooms').doc();
@@ -125,6 +126,9 @@ async function createRoom() {
 }
 
 async function joinRoom() {
+    createButton.disabled = true;
+    joinButton.disabled = true;
+    disconnectButton.disabled = false;
     const db = firebase.firestore();
     roomId = targetRoom.value;
     const roomRef = db.collection('rooms').doc(roomId);
