@@ -6,15 +6,22 @@
   <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
-  <h1>1. Make local streams visible</h1>
-  <button id="shareButton">Share</button>
-  <button id="createButton" disabled>Create</button>
-  <input type="text" id="targetRoom">
-  <button id="joinButton" disabled>Join</button>
-  <button id="disconnectButton" disabled>Disconnect</button>
-  </div>
+  <h1>Welcome to SS Meeting</h1>
+
   <div id="roomInfo"></div>
-  <div id="videos">
+
+  <div id="login-div" >
+    <button id="createButton" disabled>Create</button>
+    <input type="text" id="targetRoom">
+    <button id="joinButton" disabled>Join</button>
+  </div>
+
+  <div id="active-div" class="hidden">
+    <button id="shareButton">Share</button>
+    <button id="disconnectButton" disabled>Disconnect</button>
+  </div>
+
+  <div id="videos-div" class="hidden">
     <video id="localvideo" autoplay playsinline muted></video>
     <video id="remotevideo" playsinline autoplay></video>
   </div>

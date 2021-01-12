@@ -8,6 +8,9 @@ const joinButton = document.querySelector('#joinButton');
 const disconnectButton = document.querySelector('#disconnectButton');
 const targetRoom = document.querySelector('#targetRoom');
 const roomInfo = document.querySelector('#roomInfo');
+const loginDiv = document.querySelector('#login-div');
+const activeDiv = document.querySelector('#active-div');
+const videosDiv = document.querySelector('#videos-div');
 
 const configuration = {
     iceServers: [
@@ -67,6 +70,16 @@ function registerPeerConnectionListeners() {
     });
 }
 
+async function checkTargetRoom() {
+    if (targetRoom.value.length > 0) {
+        createButton.disabled = true;
+        joinButton.disabled = false;
+    } else {
+        createButton.disabled = false;
+        joinButton.disabled = true;
+    }
+}
+
 async function createRoom() {
     createButton.disabled = true;
     joinButton.disabled = true;
@@ -99,7 +112,7 @@ async function createRoom() {
     await roomRef.set(roomWithOffer);
     roomId = roomRef.id;
     console.log(`New room created with SDP offer. ROom ID: ${roomRef.id}`);
-    roomInfo.innerHTML = `Current room is ${roomRef.id} - You are the caller!`;
+    roomInfo.innerHTML = `Current room is ${roomRef.id} - You are a Host!`;
     peerConnection.addEventListener('track', event=>{
         console.log('Got remote track:', event.streams[0]);
         event.streams[0].getTracks().forEach(track => {
@@ -123,6 +136,10 @@ async function createRoom() {
             }
         });
     });
+
+    loginDiv.classList.add('hidden');
+    activeDiv.classList.remove('hidden');
+    videosDiv.classList.remove('hidden');
 }
 
 async function joinRoom() {
@@ -134,6 +151,7 @@ async function joinRoom() {
     const roomRef = db.collection('rooms').doc(roomId);
     const roomSnapshot = await roomRef.get();
     console.log('Got room:', roomSnapshot.exists);
+    roomInfo.innerHTML = `You joined this room ${roomId} - You are an Attendee!`;
     if (roomSnapshot.exists) {
         console.log('Create PeerConnection with configuration: ', configuration);
         peerConnection = new RTCPeerConnection(configuration);
@@ -180,6 +198,10 @@ async function joinRoom() {
             });
         });
     }
+
+    loginDiv.classList.add('hidden');
+    activeDiv.classList.remove('hidden');
+    videosDiv.classList.remove('hidden');
 }
 function gotDisplayMediaStream(streams) {
     if (localStream) {
@@ -234,6 +256,7 @@ function init() {
     remoteStream = new MediaStream();
     shareButton.addEventListener('click', shareScreen);
     createButton.addEventListener('click', createRoom);
+    targetRoom.addEventListener('input', checkTargetRoom);
     joinButton.addEventListener('click', joinRoom);
     disconnectButton.addEventListener('click', hangup);
 }
