@@ -183,6 +183,7 @@ function gotDisplayMediaStream(streams) {
     }
     shareButton.disabled = true;
     createButton.disabled = false;
+    joinButton.disabled = false;
     localStream = streams; // make stream available to console
     localVideo.srcObject = streams;
     remoteVideo.srcObject = remoteStream;
@@ -204,6 +205,7 @@ function gotUserMediaStream(streams) {
         localStream.getTracks().forEach(track => { track.stop(); });
     }
     createButton.disabled = false;
+    joinButton.disabled = false;
     localStream = streams; // make stream available to console
     localVideo.srcObject = streams;
     remoteVideo.srcObject = remoteStream;
