@@ -126,8 +126,8 @@ async function createRoom() {
 
 async function joinRoom() {
     const db = firebase.firestore();
-    const targetRoom = roomId.value;
-    const roomRef = db.collection('rooms').doc(targetRoom);
+    roomId = targetRoom.value;
+    const roomRef = db.collection('rooms').doc(roomId);
     const roomSnapshot = await roomRef.get();
     console.log('Got room:', roomSnapshot.exists);
     if (roomSnapshot.exists) {
