@@ -70,7 +70,7 @@ function registerPeerConnectionListeners() {
     });
 }
 
-async function checkTargetRoom() {
+function checkTargetRoom() {
     if (targetRoom.value.length > 0) {
         createButton.disabled = true;
         joinButton.disabled = false;
@@ -78,6 +78,12 @@ async function checkTargetRoom() {
         createButton.disabled = false;
         joinButton.disabled = true;
     }
+}
+
+function loadRoom() {
+    loginDiv.classList.add('hidden');
+    activeDiv.classList.remove('hidden');
+    videosDiv.classList.remove('hidden');
 }
 
 async function createRoom() {
@@ -137,9 +143,7 @@ async function createRoom() {
         });
     });
 
-    loginDiv.classList.add('hidden');
-    activeDiv.classList.remove('hidden');
-    videosDiv.classList.remove('hidden');
+    loadRoom();
 }
 
 async function joinRoom() {
@@ -199,9 +203,7 @@ async function joinRoom() {
         });
     }
 
-    loginDiv.classList.add('hidden');
-    activeDiv.classList.remove('hidden');
-    videosDiv.classList.remove('hidden');
+    loadRoom();
 }
 function gotDisplayMediaStream(streams) {
     if (localStream) {
