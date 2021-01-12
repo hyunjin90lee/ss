@@ -199,11 +199,12 @@ function shareScreen() {
 }
 
 function gotUserMediaStream(streams) {
+    if (localStream) {
+        localStream.getTracks().forEach(track => { track.stop(); });
+    }
     createButton.disabled = false;
     localStream = streams; // make stream available to console
     localVideo.srcObject = streams;
-    remoteStream = new MediaStream();
-    remoteVideo.srcObject = remoteStream;
 }
 
 function start() {
@@ -222,6 +223,8 @@ function start() {
 
 function init() {
     start();
+    remoteStream = new MediaStream();
+    remoteVideo.srcObject = remoteStream;
     shareButton.addEventListener('click', shareScreen);
     createButton.addEventListener('click', createRoom);
     joinButton.addEventListener('click', joinRoom);
