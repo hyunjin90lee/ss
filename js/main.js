@@ -7,6 +7,7 @@ const createButton = document.querySelector('#createButton');
 const joinButton = document.querySelector('#joinButton');
 const disconnectButton = document.querySelector('#disconnectButton');
 const targetRoom = document.querySelector('#targetRoom');
+const targetRoomLabel = document.querySelector('#targetRoom-label');
 const roomInfo = document.querySelector('#roomInfo');
 const loginDiv = document.querySelector('#login-div');
 const activeDiv = document.querySelector('#active-div');
@@ -71,9 +72,21 @@ function registerPeerConnectionListeners() {
 }
 
 function checkTargetRoom() {
-    if (targetRoom.value.length > 0) {
+    var roomNumber = targetRoom.value;
+
+    if (roomNumber.length > 0) {
         createButton.disabled = true;
-        joinButton.disabled = false;
+
+        var re = /^[a-zA-Z0-9]+$/;
+        var valid = (roomNumber.length == 20) && re.exec(roomNumber);
+
+        if (valid) {
+            joinButton.disabled = false;
+            targetRoomLabel.classList.add('hidden');
+        } else {
+            joinButton.disabled = true;
+            targetRoomLabel.classList.remove('hidden');
+        }
     } else {
         createButton.disabled = false;
         joinButton.disabled = true;
@@ -155,8 +168,9 @@ async function joinRoom() {
     const roomRef = db.collection('rooms').doc(roomId);
     const roomSnapshot = await roomRef.get();
     console.log('Got room:', roomSnapshot.exists);
-    roomInfo.innerHTML = `You joined this room ${roomId} - You are an Attendee!`;
+
     if (roomSnapshot.exists) {
+        roomInfo.innerHTML = `You joined this room ${roomId} - You are an Attendee!`;
         console.log('Create PeerConnection with configuration: ', configuration);
         peerConnection = new RTCPeerConnection(configuration);
         registerPeerConnectionListeners();
@@ -201,9 +215,10 @@ async function joinRoom() {
                 }
             });
         });
+        loadRoom();
+    } else {
+        roomInfo.innerHTML = `You cannot join this room ${roomId} - It's not exists`;
     }
-
-    loadRoom();
 }
 function gotDisplayMediaStream(streams) {
     if (localStream) {

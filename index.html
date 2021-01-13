@@ -11,9 +11,17 @@
   <div id="roomInfo"></div>
 
   <div id="login-div" >
-    <button id="createButton" disabled>Create</button>
-    <input type="text" id="targetRoom">
-    <button id="joinButton" disabled>Join</button>
+    <p>Please create a new room, or join with your room number</p> 
+    <div>
+      <input type="text" id="targetRoom">
+      <label class="error-label hidden" for="targetRoom" id="targetRoom-label">
+        RoomNumber should be 20 characters in [a-zA-Z0-9]
+      </label>
+    </div>
+    <div>
+      <button id="createButton" disabled>Create</button>
+      <button id="joinButton" disabled>Join</button>
+    </div>
   </div>
 
   <div id="active-div" class="hidden">

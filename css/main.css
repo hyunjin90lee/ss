@@ -1,5 +1,7 @@
 body {
   font-family: sans-serif;
+  background-color: #333;
+  color: white;
 }
 
 video {
@@ -16,3 +18,13 @@ div.select {
   display: none;
 }
 
+button {
+  margin: 1em 0 1em 0;
+}
+
+label.error-label {
+  color: #F44336;
+  font-size: .85em;
+  font-weight: 200;
+  margin: 0;
+}
