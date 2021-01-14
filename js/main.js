@@ -13,6 +13,9 @@ const loginDiv = document.querySelector('#login-div');
 const activeDiv = document.querySelector('#active-div');
 const videosDiv = document.querySelector('#videos-div');
 
+/* for DB */
+const db = firebase.firestore();
+
 const configuration = {
     iceServers: [
         {
@@ -30,7 +33,38 @@ let remoteStream;
 let peerConnection;
 let roomId;
 
-function hangup() {
+let isCaller = false;
+
+async function resource_free() {
+    const roomRef = db.collection('rooms').doc(roomId);
+    const roomSnapshot = await roomRef.get();
+    if (roomSnapshot.exists) {
+        if (!isCaller) {
+            roomRef.collection('calleeCandidates').get().then(res => {
+                res.forEach(element => {
+                    element.ref.delete();
+                });
+                roomRef.update({
+                    answer: firebase.firestore.FieldValue.delete()
+                });
+            });
+        } else {
+            roomRef.collection('callerCandidates').get().then(res => {
+                res.forEach(element => {
+                    element.ref.delete();
+                });
+                roomRef.update({
+                    offer: firebase.firestore.FieldValue.delete()
+                });
+                roomRef.delete();
+            });
+        }
+    } else {
+        console.log(`room ${roomId} already No exist`);
+    }
+}
+
+async function hangup() {
     console.log('Ending call');
     const tracks = localVideo.srcObject.getTracks();
     tracks.forEach(track => {
@@ -49,6 +83,9 @@ function hangup() {
     createButton.disabled = false;
     joinButton.disabled = false;
     disconnectButton.disabled = true;
+
+    /* TODO : fix the name and structure */
+    resource_free();
 }
 
 function registerPeerConnectionListeners() {
@@ -100,10 +137,11 @@ function loadRoom() {
 }
 
 async function createRoom() {
+    isCaller = true;
     createButton.disabled = true;
     joinButton.disabled = true;
     disconnectButton.disabled = false;
-    const db = firebase.firestore();
+
     const roomRef = await db.collection('rooms').doc();
     peerConnection = new RTCPeerConnection(configuration);
     registerPeerConnectionListeners();
@@ -163,7 +201,7 @@ async function joinRoom() {
     createButton.disabled = true;
     joinButton.disabled = true;
     disconnectButton.disabled = false;
-    const db = firebase.firestore();
+
     roomId = targetRoom.value;
     const roomRef = db.collection('rooms').doc(roomId);
     const roomSnapshot = await roomRef.get();
