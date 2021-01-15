@@ -35,29 +35,36 @@ let roomId;
 
 let isCaller = false;
 
+function callee_free(roomRef) {
+    roomRef.collection('calleeCandidates').get().then(res => {
+        res.forEach(element => {
+            element.ref.delete();
+        });
+        roomRef.update({
+            answer: firebase.firestore.FieldValue.delete()
+        });
+    });
+}
+
+function caller_free(roomRef) {
+    roomRef.collection('callerCandidates').get().then(res => {
+        res.forEach(element => {
+            element.ref.delete();
+        });
+        roomRef.update({
+            offer: firebase.firestore.FieldValue.delete()
+        });
+        roomRef.delete();
+    });
+}
+
 async function resource_free() {
     const roomRef = db.collection('rooms').doc(roomId);
     const roomSnapshot = await roomRef.get();
     if (roomSnapshot.exists) {
-        if (!isCaller) {
-            roomRef.collection('calleeCandidates').get().then(res => {
-                res.forEach(element => {
-                    element.ref.delete();
-                });
-                roomRef.update({
-                    answer: firebase.firestore.FieldValue.delete()
-                });
-            });
-        } else {
-            roomRef.collection('callerCandidates').get().then(res => {
-                res.forEach(element => {
-                    element.ref.delete();
-                });
-                roomRef.update({
-                    offer: firebase.firestore.FieldValue.delete()
-                });
-                roomRef.delete();
-            });
+        callee_free(roomRef);
+        if (isCaller) {
+            caller_free(roomRef);
         }
     } else {
         console.log(`room ${roomId} already No exist`);
@@ -96,6 +103,9 @@ function registerPeerConnectionListeners() {
   
     peerConnection.addEventListener('connectionstatechange', () => {
         console.log(`Connection state change: ${peerConnection.connectionState}`);
+        if (peerConnection.connectionState == "disconnected") {
+            hangup();
+        }
     });
   
     peerConnection.addEventListener('signalingstatechange', () => {
