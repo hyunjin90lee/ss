@@ -13,7 +13,6 @@ const loginDiv = document.querySelector('#login-div');
 const activeDiv = document.querySelector('#active-div');
 const videosDiv = document.querySelector('#videos-div');
 const roomSelectionDiv = document.querySelector('#room-selection');
-const videosDiv = document.querySelector('#videos-div');
 const previewDiv = document.querySelector('#preview-div');
 const connectDeviceButton = document.querySelector('#connect-device');
 const shareScreenButton = document.querySelector('#share-screen');
