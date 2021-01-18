@@ -7,20 +7,18 @@
 </head>
 <body>
   <h1>Welcome to SS Meeting</h1>
-
   <div id="roomInfo"></div>
-
-  <div id="login-div" >
+  <div id="login-div">
     <p>Please create a new room, or join with your room number</p> 
-    <div>
+    <div id="room-selection" class="hidden">
       <input type="text" id="targetRoom">
       <label class="error-label hidden" for="targetRoom" id="targetRoom-label">
         RoomNumber should be 20 characters in [a-zA-Z0-9]
       </label>
+      <button id="joinButton" disabled>Join Meeting</button>
     </div>
     <div>
-      <button id="createButton" disabled>Create</button>
-      <button id="joinButton" disabled>Join</button>
+      <button id="createButton">Create</button>
     </div>
   </div>
 
@@ -30,8 +28,15 @@
   </div>
 
   <div id="videos-div" class="hidden">
-    <video id="localvideo" autoplay playsinline muted></video>
+    <video id="localvideo" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
     <video id="remotevideo" playsinline autoplay></video>
+  </div>
+  <div id="preview-div" class="hidden">
+    <div id="call-config">
+      <button id="connect-device">Connect to Device</button>
+      <button id="share-screen">Share Screen</button>
+    </div>
+    <button id="meet-now">Meet Now</button>
   </div>
   <div id="errorMsg"></div>
   
