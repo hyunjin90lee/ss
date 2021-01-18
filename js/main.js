@@ -12,6 +12,7 @@ const roomInfo = document.querySelector('#roomInfo');
 const loginDiv = document.querySelector('#login-div');
 const activeDiv = document.querySelector('#active-div');
 const videosDiv = document.querySelector('#videos-div');
+const roomSelectionDiv = document.querySelector('#room-selection');
 
 /* for DB */
 const db = firebase.firestore();
@@ -316,7 +317,28 @@ function start() {
         });
 }
 
+function hide_(element) {
+    element.classList.add('hidden');
+};
+
+function show_(element) {
+    element.classList.remove('hidden');
+}
+
+function onVisibilityChange() {
+    if (document.visibilityState === 'prerender') {
+        return;
+    }
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    init();
+}
+
 function init() {
+    if (document.visibilityState === 'prerender') {
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return;
+    }
+    show_(roomSelectionDiv);
     start();
     remoteStream = new MediaStream();
     shareButton.addEventListener('click', shareScreen);
