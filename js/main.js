@@ -295,7 +295,7 @@ function gotDisplayMediaStream(streams) {
     remoteVideo.srcObject = remoteStream;
     localStream.getVideoTracks()[0].addEventListener('ended', () => {
         shareButton.disabled = false;
-        start();
+        onConnectDevice();
     });
 }
 
@@ -353,7 +353,6 @@ function init() {
         return;
     }
     show_(roomSelectionDiv);
-    start();
     remoteStream = new MediaStream();
     createButton.addEventListener('click', createRoom);
     targetRoom.addEventListener('input', checkTargetRoom);
