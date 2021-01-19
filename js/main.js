@@ -9,6 +9,7 @@ const disconnectButton = document.querySelector('#disconnectButton');
 const targetRoom = document.querySelector('#targetRoom');
 const targetRoomLabel = document.querySelector('#targetRoom-label');
 const roomInfo = document.querySelector('#roomInfo');
+const noticeInfo = document.querySelector('#noticeInfo');
 const loginDiv = document.querySelector('#login-div');
 const activeDiv = document.querySelector('#active-div');
 const videosDiv = document.querySelector('#videos-div');
@@ -49,6 +50,7 @@ function callee_free(roomRef) {
             answer: firebase.firestore.FieldValue.delete()
         });
     });
+    console.log('callee_free done');
 }
 
 function caller_free(roomRef) {
@@ -61,6 +63,7 @@ function caller_free(roomRef) {
         });
         roomRef.delete();
     });
+    console.log('caller_free done');
 }
 
 async function resource_free() {
@@ -74,6 +77,7 @@ async function resource_free() {
     } else {
         console.log(`room ${roomId} already No exist`);
     }
+    console.log('resource_free done');
 }
 
 async function hangup() {
@@ -92,12 +96,14 @@ async function hangup() {
     remoteVideo.srcObject = null;
     shareButton.disabled = false;
     roomInfo.innerHTML = '';
+    noticeInfo.innerHTML = '';
     createButton.disabled = false;
     joinButton.disabled = false;
     disconnectButton.disabled = true;
 
     /* TODO : fix the name and structure */
     resource_free();
+    hideMeetingRoom();
 }
 
 function registerPeerConnectionListeners() {
@@ -109,7 +115,7 @@ function registerPeerConnectionListeners() {
     peerConnection.addEventListener('connectionstatechange', () => {
         console.log(`Connection state change: ${peerConnection.connectionState}`);
         if (peerConnection.connectionState == "disconnected") {
-            hangup();
+            noticeInfo.innerHTML = 'Peer disconnected!! '
         }
     });
   
@@ -145,10 +151,20 @@ function checkTargetRoom() {
     }
 }
 
-function loadRoom() {
-    loginDiv.classList.add('hidden');
-    activeDiv.classList.remove('hidden');
-    videosDiv.classList.remove('hidden');
+function hideMeetingRoom() {
+    meetNowButton.disabled = false;
+    show_(loginDiv);
+    hide_(videosDiv);
+    hide_(previewDiv);
+    hide_(activeDiv);
+}
+
+function showMeetingRoom() {
+    meetNowButton.disabled = true;
+    hide_(loginDiv);
+    show_(videosDiv);
+    show_(previewDiv);
+    show_(activeDiv);
 }
 
 async function createRoom() {
@@ -156,7 +172,16 @@ async function createRoom() {
     createButton.disabled = true;
     joinButton.disabled = true;
     disconnectButton.disabled = false;
-    hide_(roomSelectionDiv);
+    hide_(loginDiv);
+    show_(videosDiv);
+    show_(previewDiv);
+}
+
+async function joinRoom() {
+    createButton.disabled = true;
+    joinButton.disabled = true;
+    disconnectButton.disabled = false;
+    hide_(loginDiv);
     show_(videosDiv);
     show_(previewDiv);
 }
@@ -192,6 +217,7 @@ async function onMeetNow() {
         roomId = roomRef.id;
         console.log(`New room created with SDP offer. ROom ID: ${roomRef.id}`);
         roomInfo.innerHTML = `Current room is ${roomRef.id} - You are a Host!`;
+        noticeInfo.innerHTML = "Press [Disconnect] button at first, and then exit the app";
         peerConnection.addEventListener('track', event=>{
             console.log('Got remote track:', event.streams[0]);
             event.streams[0].getTracks().forEach(track => {
@@ -215,6 +241,7 @@ async function onMeetNow() {
                 }
             });
         });
+        showMeetingRoom();
     } else {
         roomId = targetRoom.value;
         const roomRef = db.collection('rooms').doc(roomId);
@@ -223,6 +250,7 @@ async function onMeetNow() {
 
          if (roomSnapshot.exists) {
             roomInfo.innerHTML = `You joined this room ${roomId} - You are an Attendee!`;
+            noticeInfo.innerHTML += "Press [Disconnect] button at first, and then exit the app";
             console.log('Create PeerConnection with configuration: ', configuration);
             peerConnection = new RTCPeerConnection(configuration);
             registerPeerConnectionListeners();
@@ -267,21 +295,14 @@ async function onMeetNow() {
                     }
                 });
             });
-            loadRoom();
+            showMeetingRoom();
         } else {
             roomInfo.innerHTML = `You cannot join this room ${roomId} - It's not exists`;
         }
     }
 }
 
-async function joinRoom() {
-    createButton.disabled = true;
-    joinButton.disabled = true;
-    disconnectButton.disabled = false;
-    hide_(roomSelectionDiv);
-    show_(videosDiv);
-    show_(previewDiv);
-}
+
 
 function gotDisplayMediaStream(streams) {
     if (localStream) {
