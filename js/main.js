@@ -98,7 +98,7 @@ async function hangup() {
     tracks.forEach(track => {
         track.stop();
     });
-    if (remoteStream) {
+    if (remoteStream && remoteStream.getTracks()) {
 	console.log("Stop remote tracks. Size: " + remoteStream.getTracks().length);
         remoteStream.getTracks().forEach(track => track.stop());
     }
