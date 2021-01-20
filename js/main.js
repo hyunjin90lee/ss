@@ -101,6 +101,7 @@ async function hangup() {
     if (remoteStream && remoteStream.getTracks()) {
 	console.log("Stop remote tracks. Size: " + remoteStream.getTracks().length);
         remoteStream.getTracks().forEach(track => track.stop());
+	remoteStream = new MediaStream(); // TODO: remove
     }
     if (peerConnection) {
         peerConnection.close();
