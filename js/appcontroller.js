@@ -120,8 +120,8 @@ AppController.prototype.hangup = function() {
     this.disconnectButton.disabled = true;
 
     this.resource_free();
-    this.userConstraints.forEach((input)=>input.disabled=false);
-    this.displayConstraints.forEach((input)=>input.disabled=false);
+    // this.userConstraints.forEach((input)=>input.disabled=false);
+    // this.displayConstraints.forEach((input)=>input.disabled=false);
     this.hide_(mediaConstraintDiv);
     this.hideMeetingRoom();
 }

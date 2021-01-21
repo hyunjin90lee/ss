@@ -64,7 +64,7 @@ Call.prototype.onDisplayContraints = function(input) {
 }
 
 Call.prototype.handleMediaOptions = function(type, value) {
-    if (this.peerConnection.connectionState == "connected") {
+    if (this.peerConnection.connectionState == "connected" && this.localStream) {
         if (type === "video") {
             if (value === "true") {
                 this.localStream.getVideoTracks().forEach(track => {
