@@ -5,8 +5,6 @@ var Call = function () {
 
     this.localVideo = document.querySelector('#localvideo');
     this.remoteVideo = document.querySelector('#remotevideo');
-    this.userMediaConstraints = {video: true, audio: true};
-    this.displayMediaContraints = {video: true, audio: true};
 
     this.configuration = {
         iceServers: [
@@ -34,13 +32,15 @@ var Call = function () {
 
     this.remoteStream = new MediaStream();
     this.onAddCallCandidate = null;
+    this.videoSenders = [];
+    this.audioSenders = [];
 }
 
 Call.prototype.onConnectDevice = function() {
     if (this.localStream) {
         this.localStream.getTracks().forEach(track => { track.stop(); });
     }
-    navigator.mediaDevices.getUserMedia(this.userMediaConstraints)
+    navigator.mediaDevices.getUserMedia({video:true, audio:true})
         .then(this.gotUserMediaStream.bind(this)).catch((error) => {
             console.log("[Error] failed to get media, name: " + error.name + ", message: " + error.message);
             return false;
@@ -48,7 +48,7 @@ Call.prototype.onConnectDevice = function() {
 }
 
 Call.prototype.onShareScreen = function() {
-    return navigator.mediaDevices.getDisplayMedia(this.displayMediaContraints)
+    return navigator.mediaDevices.getDisplayMedia({video:true, audio:true})
     .then(this.gotDisplayMediaStream.bind(this), (error) => {
         console.log("[Error] failed to share screen:, name: " + error.name + ", message: " + error.message);
         return false;
@@ -56,18 +56,38 @@ Call.prototype.onShareScreen = function() {
 }
 
 Call.prototype.onUserContraints = function(input) {
-    this.userMediaConstraints[input.name.split("-")[1]] = input.value;
-    if (this.localStream) {
-        this.localStream.getTracks().
-            forEach(track => track.applyConstraints(this.userMediaConstraints));
-    }
+    this.handleMediaOptions(input.name.split("-")[1], input.value);
 }
 
 Call.prototype.onDisplayContraints = function(input) {
-    this.displayMediaContraints[input.name.split("-")[1]] = input.value;
-    if (this.localStream) {
-        this.localStream.getTracks().
-            forEach(track => track.applyConstraints(this.displayMediaContraints));
+    this.handleMediaOptions(input.name.split("-")[1], input.value);
+}
+
+Call.prototype.handleMediaOptions = function(type, value) {
+    if (this.peerConnection.connectionState == "connected") {
+        if (type === "video") {
+            if (value === "true") {
+                this.localStream.getVideoTracks().forEach(track => {
+                    this.videoSenders.push(this.peerConnection.addTrack(track, this.localStream));
+                });
+            } else {
+                this.videoSenders.forEach(sender => {
+                    this.peerConnection.removeTrack(sender);
+                });
+                this.videoSenders = [];
+            }
+        } else if (type=="audio") {
+            if (value === "true") {
+                this.localStream.getAudioTracks().forEach(track => {
+                    this.audioSenders.push(this.peerConnection.addTrack(track, this.localStream));
+                });
+            } else {
+                this.audioSenders.forEach(sender => {
+                    this.peerConnection.removeTrack(sender);
+                    this.audioSenders = [];
+                });
+            }
+        } else;
     }
 }
 
@@ -103,9 +123,10 @@ Call.prototype.startConnection = function(isCaller) {
     this.peerConnection = new RTCPeerConnection(this.configuration);
     this.registerPeerConnectionListeners();
     
-    this.localStream.getTracks().forEach(track => {
-        this.peerConnection.addTrack(track, this.localStream);
-    });
+    this.localStream.getVideoTracks().forEach(track =>
+        this.videoSenders.push(this.peerConnection.addTrack(track, this.localStream)));
+    this.localStream.getAudioTracks().forEach(track =>
+        this.audioSenders.push(this.peerConnection.addTrack(track, this.localStream)));
 
     this.peerConnection.addEventListener('icecandidate', event => {
         if (!event.candidate) {

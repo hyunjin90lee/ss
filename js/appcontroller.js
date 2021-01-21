@@ -122,8 +122,6 @@ AppController.prototype.hangup = function() {
     this.resource_free();
     this.userConstraints.forEach((input)=>input.disabled=false);
     this.displayConstraints.forEach((input)=>input.disabled=false);
-    // $("#display-constraint :input").prop("disabled", false);
-    // $("#user-constraint :input").prop("disabled", false);
     this.hide_(mediaConstraintDiv);
     this.hideMeetingRoom();
 }
@@ -168,22 +166,18 @@ AppController.prototype.resource_free = async function () {
 
 
 AppController.prototype.onConnectDevice = async function() {
-    if (await this.call_.onConnectDevice() === true) {
+    if (await this.call_.onConnectDevice() == true) {
         this.connectDeviceButton.disabled = true;
-        // $("#display-constraint :input").prop("disabled", false);
-        // $("#user-constraint :input").prop("disabled", true);
-        this.userConstraints.forEach(input => input.disabled = true);
-        this.displayConstraints.forEach(input => input.disabled = false);
+        // this.userConstraints.forEach(input => input.disabled = true);
+        // this.displayConstraints.forEach(input => input.disabled = false);
     }
 }
 
 AppController.prototype.onShareScreen = async function() {
-    if (await this.call_.onShareScreen() === true) {
+    if (await this.call_.onShareScreen() == true) {
         this.shareScreenButton.disabled = true;
-        // $("#display-constraint :input").prop("disabled", true);
-        // $("#user-constraint :input").prop("disabled", false);
-        this.userConstraints.forEach(input => input.disabled = false);
-        this.displayConstraints.forEach(input => input.disabled = true);
+        // this.userConstraints.forEach(input => input.disabled = false);
+        // this.displayConstraints.forEach(input => input.disabled = true);
     }
 }
 
@@ -254,7 +248,7 @@ AppController.prototype.onMeetNow = async function() {
 }
 
 AppController.prototype.onUserContraints = function(event) {
-    console.log("🚀 ~ appcontroller.js ~ line 260 ~ onUserContraints ~ event", event.target);
+    console.log("onUserContraints ~ event", event.target);
     this.call_.onUserContraints(event.target);
 }
 
