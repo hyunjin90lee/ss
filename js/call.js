@@ -5,6 +5,8 @@ var Call = function () {
 
     this.localVideo = document.querySelector('#localvideo');
     this.remoteVideo = document.querySelector('#remotevideo');
+    this.userMediaConstraints = {video: true, audio: true};
+    this.displayMediaContraints = {video: true, audio: true};
 
     this.configuration = {
         iceServers: [
@@ -38,22 +40,35 @@ Call.prototype.onConnectDevice = function() {
     if (this.localStream) {
         this.localStream.getTracks().forEach(track => { track.stop(); });
     }
-    const constraints = {
-        video: true,
-        audio: true
-    };
-    navigator.mediaDevices.getUserMedia(constraints)
+    navigator.mediaDevices.getUserMedia(this.userMediaConstraints)
         .then(this.gotUserMediaStream.bind(this)).catch((error) => {
             console.log("[Error] failed to get media, name: " + error.name + ", message: " + error.message);
+            return false;
         });
 }
 
 Call.prototype.onShareScreen = function() {
-    return navigator.mediaDevices.getDisplayMedia({video: true})
+    return navigator.mediaDevices.getDisplayMedia(this.displayMediaContraints)
     .then(this.gotDisplayMediaStream.bind(this), (error) => {
-        console.log("[Error] failed to share screen: ", error);
+        console.log("[Error] failed to share screen:, name: " + error.name + ", message: " + error.message);
         return false;
     });
+}
+
+Call.prototype.onUserContraints = function(input) {
+    this.userMediaConstraints[input.name.split("-")[1]] = input.value;
+    if (this.localStream) {
+        this.localStream.getTracks().
+            forEach(track => track.applyConstraints(this.userMediaConstraints));
+    }
+}
+
+Call.prototype.onDisplayContraints = function(input) {
+    this.displayMediaContraints[input.name.split("-")[1]] = input.value;
+    if (this.localStream) {
+        this.localStream.getTracks().
+            forEach(track => track.applyConstraints(this.displayMediaContraints));
+    }
 }
 
 Call.prototype.gotUserMediaStream = function(streams) {
@@ -64,6 +79,7 @@ Call.prototype.gotUserMediaStream = function(streams) {
     this.localStream = streams; // make stream available to console
     this.localVideo.srcObject = streams;
     this.remoteVideo.srcObject = this.remoteStream;
+    return true;
 }
 
 Call.prototype.gotDisplayMediaStream = function(streams) {
@@ -104,9 +120,6 @@ Call.prototype.startConnection = function(isCaller) {
         console.log('Got remote track:', event.streams[0]);
         event.streams[0].getTracks().forEach(track => {
             console.log('Add a track to the remoteStream:', track);
-            // TODO: remove ---
-		    this.remoteVideo.srcObject = this.remoteStream;
-		    // --- Test
             this.remoteStream.addTrack(track);
         });
     });
@@ -186,7 +199,6 @@ Call.prototype.hangup = function() {
     if (this.remoteStream && this.remoteStream.getTracks()) {
         console.log("Stop remote tracks. Size: " + this.remoteStream.getTracks().length);
         this.remoteStream.getTracks().forEach(track => track.stop());
-        this.remoteStream = new MediaStream(); // TODO: remove
     }
     if (this.peerConnection) {
         this.peerConnection.close();

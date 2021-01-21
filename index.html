@@ -38,6 +38,38 @@
     </div>
     <button id="meet-now">Meet Now</button>
   </div>
+  <div id="media-constraint-div" class="hidden">
+    <div id="user-constraint-div">
+      <form id="user-constraint">
+        <h3>Stream option: </h3>
+        Camera:
+        <input type="radio" id="user-video-on" name="user-video" value="true" checked>
+        <label for="user-video-on">ON</label>
+        <input type="radio" id="user-video-off" name="user-video" value="false">
+        <label for="user-video-off">OFF</label><br>
+        Voice:
+        <input type="radio" id="user-audio-on" name="user-audio" value="true" checked>
+        <label for="user-audio-on">ON</label>
+        <input type="radio" id="user-audio-off" name="user-audio" value="false">
+        <label for="user-audio-off">OFF</label>
+      </form>
+    </div>
+    <div id="display-constraint-div">
+      <form id="display-constraint">
+        <h3>Share option: </h3>
+        Display:
+        <input type="radio" id="display-video-on" name="display-video" value="true" checked>
+        <label for="display-video-on">ON</label>
+        <input type="radio" id="display-video-off" name="display-video" value="false">
+        <label for="display-video-off">OFF</label><br>
+        Audio:
+        <input type="radio" id="display-audio-on" name="display-audio" value="true" checked>
+        <label for="display-audio-on">ON</label>
+        <input type="radio" id="display-audio-off" name="display-audio" value="false">
+        <label for="display-audio-off">OFF</label>
+      </form>
+    </div>
+  </div>
   <div id="errorMsg"></div>
   
   <!-- The core Firebase JS SDK is always required and must be listed first -->
@@ -47,6 +79,7 @@
      https://firebase.google.com/docs/web/setup#available-libraries -->
   <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase-analytics.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
   <script src="js/appcontroller.js"></script>
   <script src="js/call.js"></script>
   <script src="js/infobox.js"></script>
@@ -76,8 +109,7 @@
   <!--
   TODO: replace adapter-latest.js
   -->
-  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-  <script src="/socket.io/socket.io.js"></script> -->
+  <!--<script src="/socket.io/socket.io.js"></script> -->
   <!--<script src="js/main.js"></script> -->
 </body>
 </html>
