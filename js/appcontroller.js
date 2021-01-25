@@ -5,9 +5,7 @@ const activeDiv = document.querySelector('#active-div');
 const videosDiv = document.querySelector('#videos-div');
 const roomSelectionDiv = document.querySelector('#room-selection');
 const previewDiv = document.querySelector('#preview-div');
-const mediaConstraintDiv = document.querySelector('#media-constraint-div');
-
-
+const localMediaOptionDiv = document.querySelector('#local-media-option-div');
 
 var AppController = function(){
     console.log("new AppController!!");
@@ -32,9 +30,8 @@ AppController.prototype.init = function() {
     this.shareScreenButton = document.querySelector('#share-screen');
     this.meetNowButton = document.querySelector('#meet-now');
     this.targetRoomLabel = document.querySelector('#targetRoom-label');
-
-    this.userConstraints = document.querySelectorAll('#user-constraint > input');
-    this.displayConstraints = document.querySelectorAll('#display-constraint > input');
+    this.localMediaOption =
+        document.querySelectorAll('input[name="local-video"], input[name="local-audio"]');
 
     this.createButton.addEventListener('click', this.createRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
@@ -43,10 +40,8 @@ AppController.prototype.init = function() {
     this.connectDeviceButton.addEventListener('click', this.onConnectDevice.bind(this));
     this.shareScreenButton.addEventListener('click', this.onShareScreen.bind(this));
     this.meetNowButton.addEventListener('click', this.onMeetNow.bind(this));
-    this.userConstraints.
-        forEach(input => input.addEventListener('change', this.onUserContraints.bind(this)));
-    this.displayConstraints.
-        forEach(input => input.addEventListener('change', this.onDisplayContraints.bind(this)));
+    this.localMediaOption.
+        forEach(input => input.addEventListener('change', this.onMediaOption.bind(this)));
 
     this.db = firebase.firestore();
 
@@ -71,7 +66,7 @@ AppController.prototype.createRoom = async function() {
     this.hide_(loginDiv);
     this.show_(videosDiv);
     this.show_(previewDiv);
-    this.show_(mediaConstraintDiv);
+    this.show_(localMediaOptionDiv);
 }
 
 AppController.prototype.joinRoom = async function() {
@@ -85,7 +80,7 @@ AppController.prototype.joinRoom = async function() {
     this.hide_(loginDiv);
     this.show_(videosDiv);
     this.show_(previewDiv);
-    this.show_(mediaConstraintDiv);
+    this.show_(localMediaOptionDiv);
 }
 
 AppController.prototype.checkTargetRoom = function() {
@@ -120,9 +115,7 @@ AppController.prototype.hangup = function() {
     this.disconnectButton.disabled = true;
 
     this.resource_free();
-    // this.userConstraints.forEach((input)=>input.disabled=false);
-    // this.displayConstraints.forEach((input)=>input.disabled=false);
-    this.hide_(mediaConstraintDiv);
+    this.hide_(localMediaOptionDiv);
     this.hideMeetingRoom();
 }
 
@@ -167,17 +160,15 @@ AppController.prototype.resource_free = async function () {
 
 AppController.prototype.onConnectDevice = async function() {
     if (await this.call_.onConnectDevice() == true) {
+        this.shareScreenButton.disabled = false;
         this.connectDeviceButton.disabled = true;
-        // this.userConstraints.forEach(input => input.disabled = true);
-        // this.displayConstraints.forEach(input => input.disabled = false);
     }
 }
 
 AppController.prototype.onShareScreen = async function() {
     if (await this.call_.onShareScreen() == true) {
         this.shareScreenButton.disabled = true;
-        // this.userConstraints.forEach(input => input.disabled = false);
-        // this.displayConstraints.forEach(input => input.disabled = true);
+        this.connectDeviceButton.disabled = false;
     }
 }
 
@@ -247,14 +238,9 @@ AppController.prototype.onMeetNow = async function() {
     this.showMeetingRoom();
 }
 
-AppController.prototype.onUserContraints = function(event) {
-    console.log("onUserContraints ~ event", event.target);
-    this.call_.onUserContraints(event.target);
-}
-
-AppController.prototype.onDisplayContraints = function(event) {
-    console.log("🚀 ~ appcontroller.js ~ line 265 ~ onUserContraints ~ event", event.target);
-    this.call_.onDisplayContraints(event.target);
+AppController.prototype.onMediaOption = function(event) {
+    console.log("onMediaOption ~ event: ", event.target);
+    this.call_.onMediaOption(event.target);
 }
 
 AppController.prototype.hideMeetingRoom = function() {

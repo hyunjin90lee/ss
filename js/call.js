@@ -5,6 +5,7 @@ var Call = function () {
 
     this.localVideo = document.querySelector('#localvideo');
     this.remoteVideo = document.querySelector('#remotevideo');
+    this.localMediaOption = {video: true, audio: true};
 
     this.configuration = {
         iceServers: [
@@ -55,39 +56,26 @@ Call.prototype.onShareScreen = function() {
     });
 }
 
-Call.prototype.onUserContraints = function(input) {
-    this.handleMediaOptions(input.name.split("-")[1], input.value);
-}
-
-Call.prototype.onDisplayContraints = function(input) {
+Call.prototype.onMediaOption = function(input) {
     this.handleMediaOptions(input.name.split("-")[1], input.value);
 }
 
 Call.prototype.handleMediaOptions = function(type, value) {
-    if (this.peerConnection.connectionState == "connected" && this.localStream) {
-        if (type === "video") {
-            if (value === "true") {
-                this.localStream.getVideoTracks().forEach(track => {
-                    this.videoSenders.push(this.peerConnection.addTrack(track, this.localStream));
-                });
-            } else {
-                this.videoSenders.forEach(sender => {
-                    this.peerConnection.removeTrack(sender);
-                });
-                this.videoSenders = [];
-            }
-        } else if (type=="audio") {
-            if (value === "true") {
-                this.localStream.getAudioTracks().forEach(track => {
-                    this.audioSenders.push(this.peerConnection.addTrack(track, this.localStream));
-                });
-            } else {
-                this.audioSenders.forEach(sender => {
-                    this.peerConnection.removeTrack(sender);
-                    this.audioSenders = [];
-                });
-            }
-        } else;
+    if (!this.localStream) {
+        return;
+    }
+    console.log("handleMediaOptions: "+value);
+
+    if (type === "video") {
+        this.localStream.getVideoTracks().forEach((track) => {
+            track.enabled = value==="true";
+            console.log("track.enabled: " + track.enabled + "/" + value);
+        })
+    } else if (type === "audio"){
+        this.localStream.getAudioTracks().forEach((track) => {
+            track.enabled = value==="true";
+            console.log("track.enabled: " + track.enabled + "/" + value);
+        })
     }
 }
 

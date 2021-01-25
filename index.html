@@ -31,44 +31,33 @@
     <video id="localvideo" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
     <video id="remotevideo" playsinline autoplay></video>
   </div>
-  <div id="preview-div" class="hidden">
-    <div id="call-config">
+  <div id="preview-div" class="hidden row">
+    <div id="call-config" class="column">
       <button id="connect-device">Connect to Device</button>
       <button id="share-screen">Share Screen</button>
     </div>
-    <button id="meet-now">Meet Now</button>
+    <div class="column">
+      <button id="meet-now">Meet Now</button>
+    </div>
   </div>
-  <div id="media-constraint-div" class="hidden">
-    <div id="user-constraint-div">
-      <form id="user-constraint">
-        <h3>Stream option: </h3>
-        Camera:
-        <input type="radio" id="user-video-on" name="user-video" value="true" checked>
-        <label for="user-video-on">ON</label>
-        <input type="radio" id="user-video-off" name="user-video" value="false">
-        <label for="user-video-off">OFF</label><br>
-        Voice:
-        <input type="radio" id="user-audio-on" name="user-audio" value="true" checked>
-        <label for="user-audio-on">ON</label>
-        <input type="radio" id="user-audio-off" name="user-audio" value="false">
-        <label for="user-audio-off">OFF</label>
-      </form>
-    </div>
-    <div id="display-constraint-div">
-      <form id="display-constraint">
-        <h3>Share option: </h3>
-        Display:
-        <input type="radio" id="display-video-on" name="display-video" value="true" checked>
-        <label for="display-video-on">ON</label>
-        <input type="radio" id="display-video-off" name="display-video" value="false">
-        <label for="display-video-off">OFF</label><br>
-        Audio:
-        <input type="radio" id="display-audio-on" name="display-audio" value="true" checked>
-        <label for="display-audio-on">ON</label>
-        <input type="radio" id="display-audio-off" name="display-audio" value="false">
-        <label for="display-audio-off">OFF</label>
-      </form>
-    </div>
+  <div id="local-media-option-div" class="hidden row">
+    <form id="local-media-option">
+      <h3>Local media option: </h3>
+      <div class="column">
+        Camera/Display:
+        <input type="radio" id="local-video-on" name="local-video" value="true" checked>
+        <label for="local-video-on">ON</label>
+        <input type="radio" id="local-video-off" name="local-video" value="false">
+        <label for="local-video-off">OFF</label><br>
+      </div>
+      <div class="column">
+        Voice/Audio:
+        <input type="radio" id="local-audio-on" name="local-audio" value="true" checked>
+        <label for="local-audio-on">ON</label>
+        <input type="radio" id="local-audio-off" name="local-audio" value="false">
+        <label for="local-audio-off">OFF</label>
+      </div>
+    </form>
   </div>
   <div id="errorMsg"></div>
   

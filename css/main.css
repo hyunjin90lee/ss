@@ -28,3 +28,14 @@ label.error-label {
   font-weight: 200;
   margin: 0;
 }
+
+.column {
+  float: left;
+  width: 50%;
+  box-sizing: border-box;
+}
+
+.row:after {
+  display: table;
+  box-sizing: border-box;
+}
