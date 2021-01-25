@@ -8,11 +8,15 @@ var InfoBox = function() {
 }
 
 InfoBox.prototype.resetMessage = function () {
+    this.normal_(this.roomInfo);
+    this.normal_(this.noticeInfo);
     this.roomInfo.innerHTML = '';
     this.noticeInfo.innerHTML = '';
 }
 
 InfoBox.prototype.loginRoomMessage = function (isCaller, roomId) {
+    this.normal_(this.roomInfo);
+
     if (isCaller) {
         this.roomInfo.innerHTML = `Current room is ${roomId} - You are a Host!`;
     } else {
@@ -22,5 +26,19 @@ InfoBox.prototype.loginRoomMessage = function (isCaller, roomId) {
 }
 
 InfoBox.prototype.loginErrorMessage = function (roomId) {
+    this.error_(this.roomInfo);
     this.roomInfo.innerHTML = `You cannot join this room ${roomId} - It's not exists`;
+}
+
+InfoBox.prototype.roomExistErrorMessage = function (roomId) {
+    this.error_(this.roomInfo);
+    this.roomInfo.innerHTML = `Room ${roomId} is already created. Choose another room number`;
+}
+
+InfoBox.prototype.error_ = function(element) {
+    element.classList.add('error-label');
+}
+
+InfoBox.prototype.normal_ = function(element) {
+    element.classList.remove('error-label');
 }

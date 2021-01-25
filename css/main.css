@@ -22,7 +22,7 @@ button {
   margin: 1em 0 1em 0;
 }
 
-label.error-label {
+.error-label {
   color: #F44336;
   font-size: .85em;
   font-weight: 200;

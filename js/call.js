@@ -41,7 +41,7 @@ Call.prototype.onConnectDevice = function() {
     if (this.localStream) {
         this.localStream.getTracks().forEach(track => { track.stop(); });
     }
-    navigator.mediaDevices.getUserMedia({video:true, audio:true})
+    return navigator.mediaDevices.getUserMedia({video:true, audio:true})
         .then(this.gotUserMediaStream.bind(this)).catch((error) => {
             console.log("[Error] failed to get media, name: " + error.name + ", message: " + error.message);
             return false;
@@ -87,6 +87,7 @@ Call.prototype.gotUserMediaStream = function(streams) {
     this.localStream = streams; // make stream available to console
     this.localVideo.srcObject = streams;
     this.remoteVideo.srcObject = this.remoteStream;
+
     return true;
 }
 
@@ -168,7 +169,9 @@ Call.prototype.setRemoteDescription = async function (isCaller, data) {
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
         }
     } else {
-        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        if (!this.peerConnection.currentRemoteDescription && data && data.offer) {
+            await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        }
     }
 }
 
@@ -201,10 +204,13 @@ Call.prototype.registerPeerConnectionListeners = function() {
 
 Call.prototype.hangup = function() {
     console.log('Ending call');
-    const tracks = this.localVideo.srcObject.getTracks();
-    tracks.forEach(track => {
-        track.stop();
-    });
+
+    if (this.localVideo.srcObject) {
+        const tracks = this.localVideo.srcObject.getTracks();
+        tracks.forEach(track => {
+            track.stop();
+        });
+    }
     if (this.remoteStream && this.remoteStream.getTracks()) {
         console.log("Stop remote tracks. Size: " + this.remoteStream.getTracks().length);
         this.remoteStream.getTracks().forEach(track => track.stop());

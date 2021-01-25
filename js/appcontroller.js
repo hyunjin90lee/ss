@@ -33,7 +33,7 @@ AppController.prototype.init = function() {
     this.localMediaOption =
         document.querySelectorAll('input[name="local-video"], input[name="local-audio"]');
 
-    this.createButton.addEventListener('click', this.createRoom.bind(this));
+    this.createButton.addEventListener('click', this.createRandomRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
     this.joinButton.addEventListener('click', this.joinRoom.bind(this));
     this.disconnectButton.addEventListener('click', this.hangup.bind(this));
@@ -56,31 +56,45 @@ AppController.prototype.onVisibilityChange = function() {
     this.init();
 }
 
-AppController.prototype.createRoom = async function() {
-    this.roomRef = await this.db.collection('rooms').doc();
+AppController.prototype.createRandomRoom = async function() {
+    var roomNumber = randomNumber(9);
+    console.log(`randomNumber is ${roomNumber}`);
 
-    this.isCaller = true;
-    this.createButton.disabled = true;
-    this.joinButton.disabled = true;
-    this.disconnectButton.disabled = false;
-    this.hide_(loginDiv);
-    this.show_(videosDiv);
-    this.show_(previewDiv);
-    this.show_(localMediaOptionDiv);
+    this.isCaller = true; /* TODO: isCaller setting time */
+    this.targetRoom.value = roomNumber;
+    this.checkTargetRoom();
+    this.targetRoom.disabled = true;
 }
 
 AppController.prototype.joinRoom = async function() {
     this.roomId = this.targetRoom.value;
     this.roomRef = await this.db.collection('rooms').doc(this.roomId);
+    const roomSnapshot = await this.roomRef.get();
 
-    this.isCaller = false;
-    this.createButton.disabled = true;
-    this.joinButton.disabled = true;
+    if (this.isCaller) {
+        if (roomSnapshot.exists) {
+            console.log(`Room #${this.roomId} is already created. Choose another room number`);
+            this.infoBox_.roomExistErrorMessage(this.roomId);
+            this.showLoginMenu();
+            return;
+        }
+        await this.roomRef.set({created: true}); // new room created
+    } else {
+        if (!roomSnapshot.exists) {
+            console.log(`You cannot join this room ${this.roomId} - It's not exists`);
+            this.infoBox_.loginErrorMessage(this.roomId);
+            this.showLoginMenu();
+            return;
+        }
+    }
+
+    this.infoBox_.resetMessage();
     this.disconnectButton.disabled = false;
     this.hide_(loginDiv);
     this.show_(videosDiv);
     this.show_(previewDiv);
     this.show_(localMediaOptionDiv);
+    this.show_(activeDiv);
 }
 
 AppController.prototype.checkTargetRoom = function() {
@@ -89,8 +103,8 @@ AppController.prototype.checkTargetRoom = function() {
     if (roomNumber.length > 0) {
         this.createButton.disabled = true;
 
-        var re = /^[a-zA-Z0-9]+$/;
-        var valid = (roomNumber.length == 20) && re.exec(roomNumber);
+        var re = /^[0-9]+$/;
+        var valid = (roomNumber.length == 9) && re.exec(roomNumber);
 
         if (valid) {
             this.joinButton.disabled = false;
@@ -105,7 +119,7 @@ AppController.prototype.checkTargetRoom = function() {
     }
 }
 
-AppController.prototype.hangup = function() {
+AppController.prototype.hangup = async function() {
     this.call_.hangup();
     this.infoBox_.resetMessage();
 
@@ -114,12 +128,18 @@ AppController.prototype.hangup = function() {
     this.joinButton.disabled = false;
     this.disconnectButton.disabled = true;
 
-    this.resource_free();
+    await this.resource_free();
+
     this.hide_(localMediaOptionDiv);
     this.hideMeetingRoom();
+    this.showLoginMenu();
 }
 
-AppController.prototype.callee_free = function () {
+AppController.prototype.callee_free = async function () {
+    if (!this.calleeCandidatesCollection) {
+        return;
+    }
+
     this.calleeCandidatesCollection.get().then(res => {
         res.forEach(element => {
             element.ref.delete();
@@ -127,11 +147,15 @@ AppController.prototype.callee_free = function () {
         this.roomRef.update({
             answer: firebase.firestore.FieldValue.delete()
         });
+        console.log('callee_free done');
     });
-    console.log('callee_free done');
 }
 
 AppController.prototype.caller_free = function () {
+    if (!this.callerCandidatesCollection) {
+        return;
+    }
+
     this.callerCandidatesCollection.get().then(res => {
         res.forEach(element => {
             element.ref.delete();
@@ -140,15 +164,16 @@ AppController.prototype.caller_free = function () {
             offer: firebase.firestore.FieldValue.delete()
         });
         this.roomRef.delete();
+        console.log('caller_free done');
     });
-    console.log('caller_free done');
 }
 
 AppController.prototype.resource_free = async function () {
+    var isCaller = this.isCaller;
     const roomSnapshot = await this.roomRef.get();
     if (roomSnapshot.exists) {
         this.callee_free();
-        if (this.isCaller) {
+        if (isCaller) {
             this.caller_free();
         }
     } else {
@@ -160,15 +185,13 @@ AppController.prototype.resource_free = async function () {
 
 AppController.prototype.onConnectDevice = async function() {
     if (await this.call_.onConnectDevice() == true) {
-        this.shareScreenButton.disabled = false;
-        this.connectDeviceButton.disabled = true;
+        this.meetNowButton.disabled = false;
     }
 }
 
 AppController.prototype.onShareScreen = async function() {
     if (await this.call_.onShareScreen() == true) {
-        this.shareScreenButton.disabled = true;
-        this.connectDeviceButton.disabled = false;
+        this.meetNowButton.disabled = false;
     }
 }
 
@@ -257,6 +280,15 @@ AppController.prototype.showMeetingRoom = function () {
     this.show_(videosDiv);
     this.show_(previewDiv);
     this.show_(activeDiv);
+}
+
+AppController.prototype.showLoginMenu = function () {
+    this.createButton.disabled = false;
+    this.joinButton.disabled = false;
+    this.targetRoom.disabled = false;
+    this.targetRoom.value = "";
+    this.isCaller = false;
+    console.log("showLoginMenu")
 }
 
 AppController.prototype.hide_ = function(element) {
