@@ -5,7 +5,7 @@ const activeDiv = document.querySelector('#active-div');
 const videosDiv = document.querySelector('#videos-div');
 const roomSelectionDiv = document.querySelector('#room-selection');
 const previewDiv = document.querySelector('#preview-div');
-const localMediaOptionDiv = document.querySelector('#local-media-option-div');
+const mediaOptionDiv = document.querySelector('#media-option-div');
 
 var AppController = function(){
     console.log("new AppController!!");
@@ -32,6 +32,8 @@ AppController.prototype.init = function() {
     this.targetRoomLabel = document.querySelector('#targetRoom-label');
     this.localMediaOption =
         document.querySelectorAll('input[name="local-video"], input[name="local-audio"]');
+    this.remoteMediaOption =
+        document.querySelectorAll('input[name="remote-video"], input[name="remote-audio"]');
 
     this.createButton.addEventListener('click', this.createRandomRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
@@ -41,10 +43,11 @@ AppController.prototype.init = function() {
     this.shareScreenButton.addEventListener('click', this.onShareScreen.bind(this));
     this.meetNowButton.addEventListener('click', this.onMeetNow.bind(this));
     this.localMediaOption.
-        forEach(input => input.addEventListener('change', this.onMediaOption.bind(this)));
+        forEach(input => input.addEventListener('change', this.onLocalMediaOption.bind(this)));
+    this.remoteMediaOption.
+        forEach(input => input.addEventListener('change', this.onRemoteMediaOption.bind(this)));
 
     this.db = firebase.firestore();
-
     this.show_(roomSelectionDiv);
 }
 
@@ -93,7 +96,7 @@ AppController.prototype.joinRoom = async function() {
     this.hide_(loginDiv);
     this.show_(videosDiv);
     this.show_(previewDiv);
-    this.show_(localMediaOptionDiv);
+    this.show_(mediaOptionDiv);
     this.show_(activeDiv);
 }
 
@@ -130,7 +133,7 @@ AppController.prototype.hangup = async function() {
 
     await this.resource_free();
 
-    this.hide_(localMediaOptionDiv);
+    this.hide_(mediaOptionDiv);
     this.hideMeetingRoom();
     this.showLoginMenu();
 }
@@ -195,10 +198,40 @@ AppController.prototype.onShareScreen = async function() {
     }
 }
 
+AppController.prototype.addControlMediaStreamsListener = function() {
+    this.participantsCollection = this.roomRef.collection('participants');
+    this.mediaOptionRef = this.participantsCollection.doc();
+    this.mediaOptionRef.set({id:this.mediaOptionRef.id})
+    this.mediaOptionRef.onSnapshot((doc) => {
+        let data = doc.data();
+        if (data === undefined) return;
+        if ('video' in data) {
+            this.call_.onLocalMediaOption('video', data.video);
+        } else if ('audio' in data) {
+            this.call_.onLocalMediaOption('audio', data.audio);
+        }
+    });
+    this.participantsCollection.where('id','!=',this.mediaOptionRef.id).onSnapshot((snapshot) => {
+        snapshot.docChanges().forEach(async change => {
+            if (change.type === 'added') {
+                let data = change.doc.data();
+                if (data === undefined) return;
+                if ('id' in data) {
+                    if (this.participants === undefined) {
+                        this.participants = [];
+                    }
+                    this.participants.push(data.id);
+                }
+            }
+        });
+    });
+};
+
 AppController.prototype.onMeetNow = async function() {
     this.callerCandidatesCollection = this.roomRef.collection('callerCandidates');
     this.calleeCandidatesCollection = this.roomRef.collection('calleeCandidates');
-    
+    this.addControlMediaStreamsListener();
+
     this.call_.onAddCallCandidate = function(isCaller, candidate) {
         if (isCaller) {
             this.callerCandidatesCollection.add(candidate);
@@ -261,9 +294,20 @@ AppController.prototype.onMeetNow = async function() {
     this.showMeetingRoom();
 }
 
-AppController.prototype.onMediaOption = function(event) {
-    console.log("onMediaOption ~ event: ", event.target);
-    this.call_.onMediaOption(event.target);
+AppController.prototype.onLocalMediaOption = function(event) {
+    console.log("onLocalMediaOption ~ event: ", event.target);
+    let input = event.target;
+    this.call_.onLocalMediaOption(input.name.split("-")[1], input.value);
+}
+
+AppController.prototype.onRemoteMediaOption = function(event) {
+    console.log("onRemoteMediaOption ~ event: ", event.target);
+    if (this.participantsCollection == undefined) return;
+    let option = {};
+    let media = event.target.name.split("-")[1];
+    option[media] = event.target.value === true ? true : event.target.value == "true";
+    this.participants.forEach(id =>
+        this.participantsCollection.doc(id).update(option));
 }
 
 AppController.prototype.hideMeetingRoom = function() {

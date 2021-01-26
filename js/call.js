@@ -56,8 +56,9 @@ Call.prototype.onShareScreen = function() {
     });
 }
 
-Call.prototype.onMediaOption = function(input) {
-    this.handleMediaOptions(input.name.split("-")[1], input.value);
+Call.prototype.onLocalMediaOption = function(type, value) {
+    console.log(type + ": " + value)
+    this.handleMediaOptions(type, value);
 }
 
 Call.prototype.handleMediaOptions = function(type, value) {
@@ -65,15 +66,14 @@ Call.prototype.handleMediaOptions = function(type, value) {
         return;
     }
     console.log("handleMediaOptions: "+value);
-
     if (type === "video") {
         this.localStream.getVideoTracks().forEach((track) => {
-            track.enabled = value==="true";
+            track.enabled = value === true ? true : value==="true";
             console.log("track.enabled: " + track.enabled + "/" + value);
         })
     } else if (type === "audio"){
         this.localStream.getAudioTracks().forEach((track) => {
-            track.enabled = value==="true";
+            track.enabled = value === true ? true : value==="true";
             console.log("track.enabled: " + track.enabled + "/" + value);
         })
     }
