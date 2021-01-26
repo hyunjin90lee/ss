@@ -182,6 +182,9 @@ AppController.prototype.resource_free = async function () {
     } else {
         console.log(`room ${this.roomId} already No exist`);
     }
+    if (this.participants != undefined) {
+        this.participants.length = 0;
+    }
     console.log('resource_free done');
 }
 
