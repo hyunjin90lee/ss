@@ -214,6 +214,7 @@ Call.prototype.hangup = function() {
     if (this.remoteStream && this.remoteStream.getTracks()) {
         console.log("Stop remote tracks. Size: " + this.remoteStream.getTracks().length);
         this.remoteStream.getTracks().forEach(track => track.stop());
+        this.remoteStream = new MediaStream();
     }
     if (this.peerConnection) {
         this.peerConnection.close();
