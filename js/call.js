@@ -189,8 +189,6 @@ Call.prototype.registerPeerConnectionListeners = function() {
         console.log(`Connection state change: ${this.peerConnection.connectionState}`);
         if (this.peerConnection.connectionState == "disconnected") {
             //noticeInfo.innerHTML = 'Peer disconnected!! '
-        } else if (this.peerConnection.connectionState == "failed") {
-            this.peerConnection.restartIce(); // TODO: remove or..?
         }
     });
   
