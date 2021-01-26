@@ -190,7 +190,7 @@ Call.prototype.registerPeerConnectionListeners = function() {
         if (this.peerConnection.connectionState == "disconnected") {
             //noticeInfo.innerHTML = 'Peer disconnected!! '
         } else if (this.peerConnection.connectionState == "failed") {
-            this.peerConnection.restartICE(); // TODO: remove or..?
+            this.peerConnection.restartIce(); // TODO: remove or..?
         }
     });
   
