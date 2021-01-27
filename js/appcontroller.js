@@ -34,6 +34,10 @@ AppController.prototype.init = function() {
         document.querySelectorAll('input[name="local-video"], input[name="local-audio"]');
     this.remoteMediaOption =
         document.querySelectorAll('input[name="remote-video"], input[name="remote-audio"]');
+    this.allowDialogBtn = document.querySelector('#allow-dialog-btn');
+    this.denyDialogBtn = document.querySelector('#deny-dialog-btn');
+    this.dialogMessage = document.querySelector('#dialog-message');
+    this.remoteDialog = document.querySelector('#remote-dialog');
 
     this.createButton.addEventListener('click', this.createRandomRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
@@ -46,6 +50,7 @@ AppController.prototype.init = function() {
         forEach(input => input.addEventListener('change', this.onLocalMediaOption.bind(this)));
     this.remoteMediaOption.
         forEach(input => input.addEventListener('change', this.onRemoteMediaOption.bind(this)));
+    this.denyDialogBtn.addEventListener('click', ()=>this.remoteDialog.close());
 
     this.db = firebase.firestore();
     this.show_(roomSelectionDiv);
@@ -201,18 +206,44 @@ AppController.prototype.onShareScreen = async function() {
     }
 }
 
+AppController.prototype.prepareDialog = function(data) {
+    let target = '';
+    let value = false;
+    if ('video' in data) {
+        target = 'video';
+        if (data.video === true || data.video === "true") {
+            this.dialogMessage.innerHTML = 'Could you turn camera on, please?';
+            value = true;
+        } else {
+            this.dialogMessage.innerHTML = 'Could you turn camera off, please?';
+        }
+    } else {
+        target = 'audio';
+        if (data.video === true || data.video === "true") {
+            this.dialogMessage.innerHTML = 'Could you unmute yourself, please?';
+            value = true;
+        } else {
+            this.dialogMessage.innerHTML = 'Could you mute yourself, please?';
+        }
+    }
+    this.allowDialogBtn.addEventListener('click', ()=> {
+        this.call_.onLocalMediaOption(target, value);
+        this.remoteDialog.close();
+    });
+}
+
 AppController.prototype.addControlMediaStreamsListener = function() {
     this.participantsCollection = this.roomRef.collection('participants');
     this.mediaOptionRef = this.participantsCollection.doc();
     this.mediaOptionRef.set({id:this.mediaOptionRef.id})
     this.mediaOptionRef.onSnapshot((doc) => {
         let data = doc.data();
-        if (data === undefined) return;
-        if ('video' in data) {
-            this.call_.onLocalMediaOption('video', data.video);
-        } else if ('audio' in data) {
-            this.call_.onLocalMediaOption('audio', data.audio);
+        if ((data === undefined)
+        || (!('video' in data || 'audio' in data))) {
+            return;
         }
+        this.prepareDialog(data);
+        this.remoteDialog.showModal();        
     });
     this.participantsCollection.where('id','!=',this.mediaOptionRef.id).onSnapshot((snapshot) => {
         snapshot.docChanges().forEach(async change => {
