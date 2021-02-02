@@ -21,6 +21,7 @@ AppController.prototype.init = function() {
 
     this.infoBox_ = new InfoBox();
     this.call_ = new Call();
+    this.mediaOption_ {video: true, audio: true};
 
     this.createButton = document.querySelector('#createButton');
     this.targetRoom = document.querySelector('#targetRoom');
@@ -211,17 +212,17 @@ AppController.prototype.prepareDialog = function(data) {
     let value = false;
     if ('video' in data) {
         target = 'video';
-        if (data.video === true || data.video === "true") {
+        value = data.video === true || data.video === "true";
+        if (value) {
             this.dialogMessage.innerHTML = 'Could you turn camera on, please?';
-            value = true;
         } else {
             this.dialogMessage.innerHTML = 'Could you turn camera off, please?';
         }
     } else {
         target = 'audio';
-        if (data.video === true || data.video === "true") {
+        value = data.audio === true || data.audio === "true";
+        if (value) {
             this.dialogMessage.innerHTML = 'Could you unmute yourself, please?';
-            value = true;
         } else {
             this.dialogMessage.innerHTML = 'Could you mute yourself, please?';
         }
@@ -341,7 +342,7 @@ AppController.prototype.onRemoteMediaOption = function(event) {
     let media = event.target.name.split("-")[1];
     option[media] = event.target.value === true ? true : event.target.value == "true";
     this.participants.forEach(id =>
-        this.participantsCollection.doc(id).update(option));
+        this.participantsCollection.doc(id).set(option));
 }
 
 AppController.prototype.hideMeetingRoom = function() {
