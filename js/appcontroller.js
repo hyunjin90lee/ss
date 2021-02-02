@@ -21,7 +21,6 @@ AppController.prototype.init = function() {
 
     this.infoBox_ = new InfoBox();
     this.call_ = new Call();
-    this.mediaOption_ {video: true, audio: true};
 
     this.createButton = document.querySelector('#createButton');
     this.targetRoom = document.querySelector('#targetRoom');
