@@ -10,13 +10,20 @@
   <div id="roomInfo"></div>
   <div id="noticeInfo"></div>
   <div id="login-div">
-    <p>Please create a new room, or join with your room number</p> 
+    <p>Please create a new room, or join with your room number</p>
+    <div id="userName-div">
+      <p> Your Name : 
+        <input type="text" id="userName">
+      </p>
+    </div>
     <div id="room-selection" class="hidden">
-      <input type="text" id="targetRoom">
-      <label class="error-label hidden" for="targetRoom" id="targetRoom-label">
-        RoomNumber should be 9 numerical characters in [0-9]
-      </label>
-      <button id="joinButton" disabled>Join Meeting</button>
+      <p> Room Number :
+        <input type="text" id="targetRoom">
+        <label class="error-label hidden" for="targetRoom" id="targetRoom-label">
+          RoomNumber should be 9 numerical characters in [0-9]
+        </label>
+        <button id="joinButton" disabled>Join Meeting</button>
+      </p>
     </div>
     <div>
       <button id="createButton">Create Random Room</button>
@@ -28,8 +35,7 @@
   </div>
 
   <div id="videos-div" class="hidden">
-    <video id="localvideo" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
-    <video id="remotevideo" playsinline autoplay></video>
+    <video id="localvideo" style="border: solid 2px red;" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
   </div>
   <div id="preview-div" class="hidden row">
     <div id="call-config" class="column">
@@ -103,6 +109,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
   <script src="js/appcontroller.js"></script>
   <script src="js/call.js"></script>
+  <script src="js/connection.js"></script>
   <script src="js/infobox.js"></script>
   <script src="js/util.js"></script>
   <script>

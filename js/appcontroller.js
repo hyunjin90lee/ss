@@ -20,8 +20,9 @@ AppController.prototype.init = function() {
     }
 
     this.infoBox_ = new InfoBox();
-    this.call_ = new Call();
+    this.call_ = new Call(this);
 
+    this.userName = document.querySelector("#userName");
     this.createButton = document.querySelector('#createButton');
     this.targetRoom = document.querySelector('#targetRoom');
     this.joinButton = document.querySelector('#joinButton');
@@ -52,6 +53,8 @@ AppController.prototype.init = function() {
         forEach(input => input.addEventListener('change', this.onRemoteMediaOption.bind(this)));
     this.denyDialogBtn.addEventListener('click', ()=>this.remoteDialog.close());
 
+    this.userCount = 0;
+    this.isHost = false;
     this.db = firebase.firestore();
     this.show_(roomSelectionDiv);
 }
@@ -68,18 +71,25 @@ AppController.prototype.createRandomRoom = async function() {
     var roomNumber = randomNumber(9);
     console.log(`randomNumber is ${roomNumber}`);
 
-    this.isCaller = true; /* TODO: isCaller setting time */
+    this.isHost = true; /* TODO: isHost setting time */
     this.targetRoom.value = roomNumber;
     this.checkTargetRoom();
     this.targetRoom.disabled = true;
 }
 
 AppController.prototype.joinRoom = async function() {
+    if (this.userName.value.length == 0) {
+        this.user = "noname" + randomNumber(2);
+    } else {
+        this.user = this.userName.value;
+    }
+    console.log('userName is ' + this.user);
+
     this.roomId = this.targetRoom.value;
     this.roomRef = await this.db.collection('rooms').doc(this.roomId);
     const roomSnapshot = await this.roomRef.get();
 
-    if (this.isCaller) {
+    if (this.isHost) {
         if (roomSnapshot.exists) {
             console.log(`Room #${this.roomId} is already created. Choose another room number`);
             this.infoBox_.roomExistErrorMessage(this.roomId);
@@ -128,7 +138,9 @@ AppController.prototype.checkTargetRoom = function() {
 }
 
 AppController.prototype.hangup = async function() {
-    this.call_.hangup();
+    await this.call_.hangup();
+    await this.resource_free();
+
     this.infoBox_.resetMessage();
 
     this.shareScreenButton.disabled = false;
@@ -136,60 +148,30 @@ AppController.prototype.hangup = async function() {
     this.joinButton.disabled = false;
     this.disconnectButton.disabled = true;
 
-    await this.resource_free();
-
     this.hide_(mediaOptionDiv);
     this.hideMeetingRoom();
     this.showLoginMenu();
 }
 
-AppController.prototype.callee_free = async function () {
-    if (!this.calleeCandidatesCollection) {
-        return;
-    }
-
-    this.calleeCandidatesCollection.get().then(res => {
-        res.forEach(element => {
-            element.ref.delete();
-        });
-        this.roomRef.update({
-            answer: firebase.firestore.FieldValue.delete()
-        });
-        console.log('callee_free done');
-    });
-}
-
-AppController.prototype.caller_free = function () {
-    if (!this.callerCandidatesCollection) {
-        return;
-    }
-
-    this.callerCandidatesCollection.get().then(res => {
-        res.forEach(element => {
-            element.ref.delete();
-        });
-        this.roomRef.update({
-            offer: firebase.firestore.FieldValue.delete()
-        });
-        this.roomRef.delete();
-        console.log('caller_free done');
-    });
-}
-
 AppController.prototype.resource_free = async function () {
-    var isCaller = this.isCaller;
-    const roomSnapshot = await this.roomRef.get();
-    if (roomSnapshot.exists) {
-        this.callee_free();
-        if (isCaller) {
-            this.caller_free();
-        }
-    } else {
-        console.log(`room ${this.roomId} already No exist`);
-    }
+    // TBD : it should be fixed later
+    await this.userRef.delete();
+    await this.mediaOptionRef.delete();
+/*
+    var res = await this.userCollection.get();
+    res.forEach(element => {
+        element.ref.delete();
+    });
+
+    var res1 = await this.participantsCollection.get();
+    res1.forEach(element => {
+        element.ref.delete();
+    });
+*/
     if (this.participants != undefined) {
         this.participants.length = 0;
     }
+
     console.log('resource_free done');
 }
 
@@ -232,6 +214,43 @@ AppController.prototype.prepareDialog = function(data) {
     });
 }
 
+AppController.prototype.addUser = async function() {
+    this.userCollection = this.roomRef.collection('users');
+
+    this.userCollection.onSnapshot(async snapshot => {
+        snapshot.docChanges().forEach(async change => {
+            let data = change.doc.data();
+            if (change.type === 'added') {
+                this.userCount++;
+                console.log(`user Added!! name is : ${data.name}, current users are ${this.userCount}`)
+                if (this.user != data.name) {
+                    await this.call_.addPeerConnection(this.user, data.name);
+                }
+            } else if (change.type === 'removed') {
+                this.userCount--;
+                console.log(`user Removed!! name is : ${data.name}, current users are ${this.userCount}`)
+                if (this.userCount == 0) {
+                    await this.roomRef.delete();
+                }
+            }
+        })
+    })
+
+    this.userRef = this.userCollection.doc(this.user);
+    this.userRef.set({name: this.user});
+    console.log('set ' + this.user)
+    var res = await this.userCollection.get();
+    if (res.size == 1) {
+        console.log(`users collection size is ${res.size}`)
+    }
+
+    var div = document.createElement('div');
+    var localName = `[ME] ${this.user}`;
+    var text = document.createTextNode(localName);
+    div.appendChild(text);
+    videosDiv.prepend(div);
+}
+
 AppController.prototype.addControlMediaStreamsListener = function() {
     this.participantsCollection = this.roomRef.collection('participants');
     this.mediaOptionRef = this.participantsCollection.doc();
@@ -262,69 +281,11 @@ AppController.prototype.addControlMediaStreamsListener = function() {
 };
 
 AppController.prototype.onMeetNow = async function() {
-    this.callerCandidatesCollection = this.roomRef.collection('callerCandidates');
-    this.calleeCandidatesCollection = this.roomRef.collection('calleeCandidates');
     this.addControlMediaStreamsListener();
-
-    this.call_.onAddCallCandidate = function(isCaller, candidate) {
-        if (isCaller) {
-            this.callerCandidatesCollection.add(candidate);
-        } else {
-            this.calleeCandidatesCollection.add(candidate);
-        }
-    }.bind(this);
-
-    this.call_.startConnection(this.isCaller);
-
-    if (this.isCaller) {
-        const roomWithOffer = await this.call_.setLocalDescription(this.isCaller);
-        await this.roomRef.set(roomWithOffer);
-
-        this.roomId = this.roomRef.id;
-        console.log(`New room created with SDP offer. Room ID: ${this.roomRef.id}`);
- 
-        this.roomRef.onSnapshot(async snapshot => {
-            const data = snapshot.data();
-            await this.call_.setRemoteDescription(this.isCaller, data);
-        });
-
-        this.calleeCandidatesCollection.onSnapshot(snapshot => {
-            snapshot.docChanges().forEach(async change => {
-                if (change.type == 'added') {
-                    let data = change.doc.data();
-                    await this.call_.addIceCandidate(data);
-                }
-            });
-        })
-    } else {
-        const roomSnapshot = await this.roomRef.get();
-        console.log('Got room:', roomSnapshot.exists);
-
-         if (roomSnapshot.exists) {
-            const data = roomSnapshot.data();
-            console.log('Got offer:', data.offer);
-            await this.call_.setRemoteDescription(this.isCaller, data);
-
-            const roomWithAnswer = await this.call_.setLocalDescription(this.isCaller);
-            await this.roomRef.update(roomWithAnswer);
-            
-            this.callerCandidatesCollection.onSnapshot(snapshot => {
-                snapshot.docChanges().forEach(async change => {
-                    if (change.type === 'added') {
-                        let data = change.doc.data();
-                        console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
-                        await this.call_.addIceCandidate(data);
-                    }
-                });
-            });
-        } else {
-            this.infoBox_.loginErrorMessage(this.roomId);
-            return;
-        }
-    }
+    await this.addUser(); /* TBD: it will be merged with addControlMedia~~ soon */
     
     this.hide_(previewDiv);
-    this.infoBox_.loginRoomMessage(this.isCaller, this.roomId);
+    this.infoBox_.loginRoomMessage(this.isHost, this.roomId);
     this.showMeetingRoom();
 }
 
@@ -365,7 +326,8 @@ AppController.prototype.showLoginMenu = function () {
     this.joinButton.disabled = false;
     this.targetRoom.disabled = false;
     this.targetRoom.value = "";
-    this.isCaller = false;
+    this.isHost = false;
+    this.userCount = 0;
     console.log("showLoginMenu")
 }
 
