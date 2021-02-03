@@ -21,6 +21,7 @@ AppController.prototype.init = function() {
 
     this.infoBox_ = new InfoBox();
     this.call_ = new Call(this);
+    this.maxUsers = 5;
 
     this.userName = document.querySelector("#userName");
     this.createButton = document.querySelector('#createButton');
@@ -39,6 +40,8 @@ AppController.prototype.init = function() {
     this.denyDialogBtn = document.querySelector('#deny-dialog-btn');
     this.dialogMessage = document.querySelector('#dialog-message');
     this.remoteDialog = document.querySelector('#remote-dialog');
+    this.joinErrorDialog = document.querySelector('#joinError-dialog');
+    this.returnLoginBtn = document.querySelector('#return-login-btn');
 
     this.createButton.addEventListener('click', this.createRandomRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
@@ -52,6 +55,13 @@ AppController.prototype.init = function() {
     this.remoteMediaOption.
         forEach(input => input.addEventListener('change', this.onRemoteMediaOption.bind(this)));
     this.denyDialogBtn.addEventListener('click', ()=>this.remoteDialog.close());
+    this.returnLoginBtn.addEventListener('click', ()=>{
+                                                this.infoBox_.resetMessage();
+                                                this.hide_(mediaOptionDiv);
+                                                this.hideMeetingRoom();
+                                                this.showLoginMenu();
+                                                this.joinErrorDialog.close();
+                                                });
 
     this.userCount = 0;
     this.isHost = false;
@@ -87,6 +97,7 @@ AppController.prototype.joinRoom = async function() {
 
     this.roomId = this.targetRoom.value;
     this.roomRef = await this.db.collection('rooms').doc(this.roomId);
+    this.userCollection = this.roomRef.collection('users');
     const roomSnapshot = await this.roomRef.get();
 
     if (this.isHost) {
@@ -149,7 +160,6 @@ AppController.prototype.hangup = async function() {
 
     this.infoBox_.resetMessage();
 
-
     this.hide_(mediaOptionDiv);
     this.hideMeetingRoom();
     this.showLoginMenu();
@@ -157,9 +167,12 @@ AppController.prototype.hangup = async function() {
 
 AppController.prototype.resource_free = async function () {
     // TBD : it should be fixed later
-    await this.userRef.delete();
-    await this.mediaOptionRef.delete();
-
+    if (this.userRef) {
+        await this.userRef.delete();
+    }
+    if (this.mediaOptionRef) {
+        await this.mediaOptionRef.delete();
+    }
     if (this.participants != undefined) {
         this.participants.length = 0;
     }
@@ -207,8 +220,6 @@ AppController.prototype.prepareDialog = function(data) {
 }
 
 AppController.prototype.addUser = async function() {
-    this.userCollection = this.roomRef.collection('users');
-
     this.userCollection.onSnapshot(async snapshot => {
         snapshot.docChanges().forEach(async change => {
             let data = change.doc.data();
@@ -273,6 +284,13 @@ AppController.prototype.addControlMediaStreamsListener = function() {
 };
 
 AppController.prototype.onMeetNow = async function() {
+    var res = await this.userCollection.get();
+    if (res.size >= this.maxUsers) {
+        console.log('This room is FULL!! You cannot join this room');
+        this.joinErrorDialog.showModal();
+        return ;
+    }
+
     this.addControlMediaStreamsListener();
     await this.addUser(); /* TBD: it will be merged with addControlMedia~~ soon */
     

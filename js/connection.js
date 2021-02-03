@@ -265,8 +265,9 @@ Connection.prototype.hangup = async function () {
     }
     this.remoteVideo.srcObject = null;
 
-    videosDiv.remove(this.remoteVideoNameDiv);
-    videosDiv.remove(this.remoteVideo);
+    const videosDiv = document.querySelector('#videos-div');
+    videosDiv.removeChild(this.remoteVideoNameDiv);
+    videosDiv.removeChild(this.remoteVideo);
 
     await this.deleteDB();
 }
