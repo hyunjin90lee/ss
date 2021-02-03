@@ -113,6 +113,7 @@ AppController.prototype.joinRoom = async function() {
     this.show_(previewDiv);
     this.show_(mediaOptionDiv);
     this.show_(activeDiv);
+    this.infoBox_.loginRoomMessage(this.isHost, this.roomId);
 }
 
 AppController.prototype.checkTargetRoom = function() {
@@ -138,15 +139,16 @@ AppController.prototype.checkTargetRoom = function() {
 }
 
 AppController.prototype.hangup = async function() {
+    this.disconnectButton.disabled = true;
+    this.shareScreenButton.disabled = true;
+    this.connectDeviceButton.disabled = true;
+    this.meetNowButton.disabled = true;
+
     await this.call_.hangup();
     await this.resource_free();
 
     this.infoBox_.resetMessage();
 
-    this.shareScreenButton.disabled = false;
-    this.createButton.disabled = false;
-    this.joinButton.disabled = false;
-    this.disconnectButton.disabled = true;
 
     this.hide_(mediaOptionDiv);
     this.hideMeetingRoom();
@@ -157,17 +159,7 @@ AppController.prototype.resource_free = async function () {
     // TBD : it should be fixed later
     await this.userRef.delete();
     await this.mediaOptionRef.delete();
-/*
-    var res = await this.userCollection.get();
-    res.forEach(element => {
-        element.ref.delete();
-    });
 
-    var res1 = await this.participantsCollection.get();
-    res1.forEach(element => {
-        element.ref.delete();
-    });
-*/
     if (this.participants != undefined) {
         this.participants.length = 0;
     }
@@ -285,7 +277,6 @@ AppController.prototype.onMeetNow = async function() {
     await this.addUser(); /* TBD: it will be merged with addControlMedia~~ soon */
     
     this.hide_(previewDiv);
-    this.infoBox_.loginRoomMessage(this.isHost, this.roomId);
     this.showMeetingRoom();
 }
 
@@ -326,6 +317,9 @@ AppController.prototype.showLoginMenu = function () {
     this.joinButton.disabled = false;
     this.targetRoom.disabled = false;
     this.targetRoom.value = "";
+    this.connectDeviceButton.disabled = false;
+    this.shareScreenButton.disabled = false;
+
     this.isHost = false;
     this.userCount = 0;
     console.log("showLoginMenu")

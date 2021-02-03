@@ -12,7 +12,7 @@ var Connection = function (me, peer, call) {
     }
     this.caller = (compare == 1) ? me : peer;
     this.callee = (compare == 1) ? peer : me;
-    this.pcName = `pc_${this.caller}-${this.callee}`;
+    this.pcName = `[${this.caller}-${this.callee}]`;
     this.isCaller = (me == this.caller) ? true : false;
 
     console.log(`New connection name is ${this.pcName} (caller: ${this.caller}, callee: ${this.callee})`);
@@ -51,7 +51,7 @@ var Connection = function (me, peer, call) {
 }
 
 Connection.prototype.initDB = async function (pcName) {
-    this.pcCollection = this.roomRef.collection(pcName);
+    this.pcCollection = this.roomRef.collection('usersRelation');
     this.pcCollectionRef = this.pcCollection.doc(pcName);
     await this.pcCollectionRef.set({ caller: this.caller, callee: this.callee });
 
@@ -61,17 +61,14 @@ Connection.prototype.initDB = async function (pcName) {
 
 Connection.prototype.deleteDB = async function () {
     var res = await this.callerCandidatesCollection.get();
-    res.forEach(element => {
+    res.docs.forEach(element => {
         element.ref.delete();
     });
     var res1 = await this.calleeCandidatesCollection.get();
-    res1.forEach(element => {
+    res1.docs.forEach(element => {
         element.ref.delete();
     });
-    var res2 = await this.pcCollection.get();
-    res2.forEach(element => {
-        element.ref.delete();
-    });
+    this.pcCollectionRef.delete();
 }
 
 Connection.prototype.addCandidateDB = function (isCaller, candidate) {
