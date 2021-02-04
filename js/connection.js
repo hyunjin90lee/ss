@@ -47,7 +47,11 @@ var Connection = function (me, peer, call) {
 
     this.videoSenders = [];
     this.audioSenders = [];
-    
+    this.stateListeners = [];
+}
+
+Connection.prototype.addStateListener = function(listener) {
+    this.stateListeners.push(listener);
 }
 
 Connection.prototype.initDB = async function (pcName) {
@@ -112,6 +116,7 @@ Connection.prototype.initConnection = async function() {
 
 Connection.prototype.addRemoteStream = function(index, peer) {
     const videosDiv = document.querySelector('#videos-div');
+    var canvas = document.createElement('canvas');
     var video = document.createElement('video');
     var div = document.createElement('div');
     var text = document.createTextNode(peer);
@@ -122,13 +127,24 @@ Connection.prototype.addRemoteStream = function(index, peer) {
     video.autoplay = true;
     video.playsInline = true;
 
+    canvas.id = `remotemonitor${index}`;
+    canvas.style.zIndex   = 8;
+    canvas.style.position = "absolute";
+    //canvas.style.border   = "1px solid red";
+    canvas.width = "320"
+    canvas.height = "100"
 
     videosDiv.append(div);
+    videosDiv.append(canvas);
     videosDiv.append(video);
 
     this.remoteVideoNameDiv = div;
+    this.remoteCanvas = canvas;
     this.remoteVideo = video;
     this.remoteVideo.srcObject = this.remoteStream;
+
+
+    console.log('addRemoteStream: remotemonitor id',  canvas.id);
 }
 
 Connection.prototype.startOffer = async function() {
@@ -192,7 +208,15 @@ Connection.prototype.registerPeerConnectionListeners = function() {
   
     this.peerConnection.addEventListener('connectionstatechange', () => {
         console.log(`[${this.pcName}] Connection state change: ${this.peerConnection.connectionState}`);
+        if (this.peerConnection.connectionState == "connected") {
+            this.stateListeners.forEach(listener => {
+                listener("connected", this.remoteCanvas.id, this.remoteVideo.id, this.peerConnection);
+            });
+        }
         if (this.peerConnection.connectionState == "disconnected") {
+            this.stateListeners.forEach(listener => {
+                listener("disconnected", this.remoteCanvas.id);
+            });
             //noticeInfo.innerHTML = 'Peer disconnected!! '
         }
     });
@@ -263,10 +287,17 @@ Connection.prototype.hangup = async function () {
     if (this.peerConnection) {
         this.peerConnection.close();
     }
+
+    //TODO: remove listener call if "disconnected" event of connectionstatechange occurs correctly.
+    this.stateListeners.forEach(listener => {
+        listener("disconnected", this.remoteCanvas.id);
+    });
+
     this.remoteVideo.srcObject = null;
 
     const videosDiv = document.querySelector('#videos-div');
     videosDiv.removeChild(this.remoteVideoNameDiv);
+    videosDiv.removeChild(this.remoteCanvas);
     videosDiv.removeChild(this.remoteVideo);
 
     await this.deleteDB();

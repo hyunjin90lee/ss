@@ -32,10 +32,14 @@
 
   <div id="active-div" class="hidden">
     <button id="disconnectButton" disabled>Disconnect</button>
+    <input type="checkbox" id="enable-monitor" unchecked/>
+    <label for="enable-monitor">enable performance monitor</label>
   </div>
 
   <div id="videos-div" class="hidden">
-    <video id="localvideo" style="border: solid 2px red;" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
+    <canvas id="localmonitor" class="monitor" width="320" height="210"></canvas>
+    <canvas id="systemmonitor" class="system-monitor" width="320" height="30"></canvas>
+    <video id="localvideo" width="320" height ="240" style="border: solid 2px red;" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
   </div>
   <div id="preview-div" class="hidden row">
     <div id="call-config" class="column">
@@ -114,6 +118,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase-analytics.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <script src="js/monitor.js"></script>
   <script src="js/appcontroller.js"></script>
   <script src="js/call.js"></script>
   <script src="js/connection.js"></script>

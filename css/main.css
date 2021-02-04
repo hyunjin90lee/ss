@@ -14,6 +14,16 @@ video {
   width: 320px;
 }
 
+.monitor {
+  position: absolute;
+  /*border: solid 1px red;*/
+}
+
+.system-monitor {
+  position: absolute;
+  /*border: solid 1px blue;*/
+}
+
 .hidden {
   display: none;
 }

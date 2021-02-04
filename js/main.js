@@ -230,7 +230,7 @@ async function onMeetNow() {
         await roomRef.set(roomWithOffer);
         roomId = roomRef.id;
         console.log(`New room created with SDP offer. ROom ID: ${roomRef.id}`);
-        roomInfo.innerHTML = `Current room is ${roomRef.id} - You are a Host!`;
+        roomInfo.innerHTML = `Current room is ${roomRef.id}. You are a Host!`;
         noticeInfo.innerHTML = "Press [Disconnect] button at first, and then exit the app";
         peerConnection.addEventListener('track', event=>{
             console.log('Got remote track:', event.streams[0]);

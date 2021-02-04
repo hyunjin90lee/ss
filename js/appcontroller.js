@@ -42,6 +42,7 @@ AppController.prototype.init = function() {
     this.remoteDialog = document.querySelector('#remote-dialog');
     this.joinErrorDialog = document.querySelector('#joinError-dialog');
     this.returnLoginBtn = document.querySelector('#return-login-btn');
+    this.enableMonitorCheck = document.querySelector('#enable-monitor');
 
     this.createButton.addEventListener('click', this.createRandomRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
@@ -62,11 +63,21 @@ AppController.prototype.init = function() {
                                                 this.showLoginMenu();
                                                 this.joinErrorDialog.close();
                                                 });
+    this.enableMonitorCheck.addEventListener('change', function() {
+        if (this.checked) {
+            Monitor.getMonitor().start();
+        } else {
+            Monitor.getMonitor().stop();
+        }
+    });
 
     this.userCount = 0;
     this.isHost = false;
     this.db = firebase.firestore();
     this.show_(roomSelectionDiv);
+
+    Monitor.getMonitor().addSystemMonitor("systemmonitor", "localvideo");
+    this.call_.addStateListener(Monitor.onStateChanged);
 }
 
 AppController.prototype.onVisibilityChange = function() {

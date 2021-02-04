@@ -11,6 +11,11 @@ var Call = function (appController) {
     this.appController_ = appController;
     this.pc_ = [];
     this.connectionCnt = 0;
+    this.stateListeners_ = [];
+}
+
+Call.prototype.addStateListener = function(listener) {
+    this.stateListeners_.push(listener);
 }
 
 Call.prototype.onConnectDevice = function() {
@@ -86,6 +91,9 @@ Call.prototype.addPeerConnection = async function (me, peer) {
     var pcIndex = this.connectionCnt++;
 
     this.pc_[pcIndex] = new Connection(me, peer, this);
+    this.stateListeners_.forEach(listener => {
+        this.pc_[pcIndex].addStateListener(listener);
+    });
     await this.pc_[pcIndex].initConnection();
 
     await this.pc_[pcIndex].startConnection(me);
