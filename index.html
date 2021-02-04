@@ -37,9 +37,12 @@
   </div>
 
   <div id="videos-div" class="hidden">
-    <canvas id="localmonitor" class="monitor" width="320" height="210"></canvas>
-    <canvas id="systemmonitor" class="system-monitor" width="320" height="30"></canvas>
-    <video id="localvideo" width="320" height ="240" style="border: solid 2px red;" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
+    <div id="localvideo-div" class="grid" style="border: solid 2px yellow;">
+      <div id="localvideoName" style="color: yellow"></div>
+      <canvas id="localmonitor" class="monitor" width="320" height="210"></canvas>
+      <canvas id="systemmonitor" class="system-monitor" width="320" height="30"></canvas>
+      <video id="localvideo" width="320" height ="240" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
+    </div>
   </div>
   <div id="preview-div" class="hidden row">
     <div id="call-config" class="column">

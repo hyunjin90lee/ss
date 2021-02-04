@@ -3,6 +3,8 @@
 const loginDiv = document.querySelector('#login-div');
 const activeDiv = document.querySelector('#active-div');
 const videosDiv = document.querySelector('#videos-div');
+const localvideoDiv = document.querySelector('#localvideo-div');
+const localvideoName = document.querySelector('#localvideoName');
 const roomSelectionDiv = document.querySelector('#room-selection');
 const previewDiv = document.querySelector('#preview-div');
 const mediaOptionDiv = document.querySelector('#media-option-div');
@@ -166,6 +168,7 @@ AppController.prototype.hangup = async function() {
     this.connectDeviceButton.disabled = true;
     this.meetNowButton.disabled = true;
 
+    localvideoName.innerHTML = "";
     await this.call_.hangup();
     await this.resource_free();
 
@@ -243,6 +246,9 @@ AppController.prototype.addUser = async function() {
             } else if (change.type === 'removed') {
                 this.userCount--;
                 console.log(`user Removed!! name is : ${data.name}, current users are ${this.userCount}`)
+                if (this.user != data.name) {
+                    await this.call_.hangupIt(data.name);
+                }
                 if (this.userCount == 0) {
                     await this.roomRef.delete();
                 }
@@ -258,11 +264,7 @@ AppController.prototype.addUser = async function() {
         console.log(`users collection size is ${res.size}`)
     }
 
-    var div = document.createElement('div');
-    var localName = `[ME] ${this.user}`;
-    var text = document.createTextNode(localName);
-    div.appendChild(text);
-    videosDiv.prepend(div);
+    localvideoName.innerHTML = `[ME] ${this.user}`;
 }
 
 AppController.prototype.addControlMediaStreamsListener = function() {

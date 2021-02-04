@@ -115,4 +115,16 @@ Call.prototype.hangup = async function() {
         await this.pc_[i].hangup();
         delete this.pc_[i]; /* TBD ?? */
     }
+    this.connectionCnt = 0;
+}
+
+Call.prototype.hangupIt = async function(peer) {
+    for (var i=0; i<this.connectionCnt; i++) {
+        if (this.pc_[i].peerName == peer) {
+            await this.pc_[i].hangup();
+            delete this.pc_[i]; /* TBD ?? */
+            this.connectionCnt--;
+            return;
+        }
+    }
 }

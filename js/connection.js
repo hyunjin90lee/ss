@@ -10,6 +10,8 @@ var Connection = function (me, peer, call) {
         console.log('peers have same name....');
         return;
     }
+    this.myName = me;
+    this.peerName = peer;
     this.caller = (compare == 1) ? me : peer;
     this.callee = (compare == 1) ? peer : me;
     this.pcName = `[${this.caller}-${this.callee}]`;
@@ -134,15 +136,21 @@ Connection.prototype.addRemoteStream = function(index, peer) {
     canvas.width = "320"
     canvas.height = "100"
 
-    videosDiv.append(div);
-    videosDiv.append(canvas);
-    videosDiv.append(video);
-
-    this.remoteVideoNameDiv = div;
     this.remoteCanvas = canvas;
+
+    var remotevideoDiv = document.createElement('div');
+    remotevideoDiv.id = `${video.id}-div`;
+    remotevideoDiv.classList.add('grid');
+
+    videosDiv.append(remotevideoDiv);
+
+    remotevideoDiv.append(div);
+    remotevideoDiv.append(canvas);
+    remotevideoDiv.append(video);
+
+    this.remoteVideoDiv = remotevideoDiv;
     this.remoteVideo = video;
     this.remoteVideo.srcObject = this.remoteStream;
-
 
     console.log('addRemoteStream: remotemonitor id',  canvas.id);
 }
@@ -296,9 +304,11 @@ Connection.prototype.hangup = async function () {
     this.remoteVideo.srcObject = null;
 
     const videosDiv = document.querySelector('#videos-div');
-    videosDiv.removeChild(this.remoteVideoNameDiv);
-    videosDiv.removeChild(this.remoteCanvas);
-    videosDiv.removeChild(this.remoteVideo);
+
+    //videosDiv.removeChild(this.remoteCanvas);
+    //videosDiv.removeChild(this.remoteVideoNameDiv);
+    //videosDiv.removeChild(this.remoteVideo);
+    videosDiv.removeChild(this.remoteVideoDiv);
 
     await this.deleteDB();
 }
