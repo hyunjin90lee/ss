@@ -73,6 +73,7 @@ AppController.prototype.init = function() {
         }
     });
 
+    this.mediaOption = {video: true, audio: true};
     this.userCount = 0;
     this.isHost = false;
     this.db = firebase.firestore();
@@ -207,20 +208,15 @@ AppController.prototype.onShareScreen = async function() {
     }
 }
 
-AppController.prototype.prepareDialog = function(data) {
-    let target = '';
-    let value = false;
-    if ('video' in data) {
-        target = 'video';
-        value = data.video === true || data.video === "true";
+AppController.prototype.prepareDialog = function(target, value) {
+    value = value === true ? value : value === "true";    
+    if (target === 'video') {
         if (value) {
             this.dialogMessage.innerHTML = 'Could you turn camera on, please?';
         } else {
             this.dialogMessage.innerHTML = 'Could you turn camera off, please?';
         }
     } else {
-        target = 'audio';
-        value = data.audio === true || data.audio === "true";
         if (value) {
             this.dialogMessage.innerHTML = 'Could you unmute yourself, please?';
         } else {
@@ -229,20 +225,27 @@ AppController.prototype.prepareDialog = function(data) {
     }
     this.allowDialogBtn.addEventListener('click', ()=> {
         this.call_.onLocalMediaOption(target, value);
+        this.mediaOption[target] = value;
         this.remoteDialog.close();
     });
+    return this.remoteDialog;
 }
 
 AppController.prototype.addUser = async function() {
     this.userCollection.onSnapshot(async snapshot => {
         snapshot.docChanges().forEach(async change => {
             let data = change.doc.data();
+            if (data === undefined) return;
             if (change.type === 'added') {
                 this.userCount++;
                 console.log(`user Added!! name is : ${data.name}, current users are ${this.userCount}`)
                 if (this.user != data.name) {
                     await this.call_.addPeerConnection(this.user, data.name);
                 }
+                if (this.participants === undefined) {
+                    this.participants = [];
+                }
+                this.participants.push(data.name);
             } else if (change.type === 'removed') {
                 this.userCount--;
                 console.log(`user Removed!! name is : ${data.name}, current users are ${this.userCount}`)
@@ -257,7 +260,10 @@ AppController.prototype.addUser = async function() {
     })
 
     this.userRef = this.userCollection.doc(this.user);
-    this.userRef.set({name: this.user});
+    this.userRef.set({name: this.user, 
+        video: this.mediaOption.video,
+        audio: this.mediaOption.audio});
+    this.addMediaOptionListener();
     console.log('set ' + this.user)
     var res = await this.userCollection.get();
     if (res.size == 1) {
@@ -267,34 +273,19 @@ AppController.prototype.addUser = async function() {
     localvideoName.innerHTML = `[ME] ${this.user}`;
 }
 
-AppController.prototype.addControlMediaStreamsListener = function() {
-    this.participantsCollection = this.roomRef.collection('participants');
-    this.mediaOptionRef = this.participantsCollection.doc();
-    this.mediaOptionRef.set({id:this.mediaOptionRef.id})
-    this.mediaOptionRef.onSnapshot((doc) => {
+AppController.prototype.addMediaOptionListener = function() {
+    this.userRef.onSnapshot((doc) => {
         let data = doc.data();
-        if ((data === undefined)
-        || (!('video' in data || 'audio' in data))) {
+        if (data === undefined) {
             return;
         }
-        this.prepareDialog(data);
-        this.remoteDialog.showModal();        
+        if (data['video'] != this.mediaOption['video']) {
+            this.prepareDialog('video', data['video']).showModal();
+        } else if (data['audio'] != this.mediaOption['audio']) {
+            this.prepareDialog('audio', data['audio']).showModal();
+        }
     });
-    this.participantsCollection.where('id','!=',this.mediaOptionRef.id).onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach(async change => {
-            if (change.type === 'added') {
-                let data = change.doc.data();
-                if (data === undefined) return;
-                if ('id' in data) {
-                    if (this.participants === undefined) {
-                        this.participants = [];
-                    }
-                    this.participants.push(data.id);
-                }
-            }
-        });
-    });
-};
+}
 
 AppController.prototype.onMeetNow = async function() {
     var res = await this.userCollection.get();
@@ -304,7 +295,6 @@ AppController.prototype.onMeetNow = async function() {
         return ;
     }
 
-    this.addControlMediaStreamsListener();
     await this.addUser(); /* TBD: it will be merged with addControlMedia~~ soon */
     
     this.hide_(previewDiv);
@@ -314,17 +304,22 @@ AppController.prototype.onMeetNow = async function() {
 AppController.prototype.onLocalMediaOption = function(event) {
     console.log("onLocalMediaOption ~ event: ", event.target);
     let input = event.target;
-    this.call_.onLocalMediaOption(input.name.split("-")[1], input.value);
+    let target = input.name.split("-")[1];
+    let value = input.value === true || input.value === "true";
+    this.mediaOption[target] = value;
+    this.call_.onLocalMediaOption(target, value);
 }
 
 AppController.prototype.onRemoteMediaOption = function(event) {
     console.log("onRemoteMediaOption ~ event: ", event.target);
-    if (this.participantsCollection == undefined) return;
+    if (this.userCollection == undefined) return;
     let option = {};
     let media = event.target.name.split("-")[1];
     option[media] = event.target.value === true ? true : event.target.value == "true";
-    this.participants.forEach(id =>
-        this.participantsCollection.doc(id).set(option));
+    this.participants.filter(p => p !== this.userRef.id)
+    .forEach(p => {
+        this.userCollection.doc(p).set(option, {merge: true});
+    });
 }
 
 AppController.prototype.hideMeetingRoom = function() {

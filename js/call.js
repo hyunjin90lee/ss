@@ -6,7 +6,6 @@ var Call = function (appController) {
 
     this.localVideo = document.querySelector('#localvideo');
     //this.remoteVideo = document.querySelector('#remotevideo');
-    this.localMediaOption = {video: true, audio: true};
 
     this.appController_ = appController;
     this.pc_ = [];
@@ -49,12 +48,12 @@ Call.prototype.handleMediaOptions = function(type, value) {
     console.log("handleMediaOptions: "+value);
     if (type === "video") {
         this.localStream.getVideoTracks().forEach((track) => {
-            track.enabled = value === true ? true : value==="true";
+            track.enabled = value;
             console.log("track.enabled: " + track.enabled + "/" + value);
         })
     } else if (type === "audio"){
         this.localStream.getAudioTracks().forEach((track) => {
-            track.enabled = value === true ? true : value==="true";
+            track.enabled = value;
             console.log("track.enabled: " + track.enabled + "/" + value);
         })
     }
