@@ -66,15 +66,26 @@ Connection.prototype.initDB = async function (pcName) {
 }
 
 Connection.prototype.deleteDB = async function () {
+    if (this.callerUnsubscribe) {
+        await this.callerUnsubscribe();
+    }
+
     var res = await this.callerCandidatesCollection.get();
-    res.docs.forEach(element => {
-        element.ref.delete();
+    res.docs.forEach(async element => {
+        await element.ref.delete();
     });
+
+    if (this.calleeUnsubscribe) {
+        await this.calleeUnsubscribe();
+    }
+
     var res1 = await this.calleeCandidatesCollection.get();
-    res1.docs.forEach(element => {
-        element.ref.delete();
+    res1.docs.forEach(async element => {
+        await element.ref.delete();
     });
-    this.pcCollectionRef.delete();
+
+    await this.pcUnsubscribe();
+    await this.pcCollectionRef.delete();
 }
 
 Connection.prototype.addCandidateDB = function (isCaller, candidate) {
@@ -161,7 +172,7 @@ Connection.prototype.startOffer = async function() {
     await this.pcCollectionRef.update(roomWithOffer);
 
     /* it is trigger at peer(callee) added in DB */
-    this.calleeCandidatesCollection.onSnapshot(snapshot => {
+    this.calleeUnsubscribe = this.calleeCandidatesCollection.onSnapshot(snapshot => {
         snapshot.docChanges().forEach(async change => {
             if (change.type == 'added') {
                 let data = change.doc.data();
@@ -178,7 +189,7 @@ Connection.prototype.startAnswer = async function() {
     await this.pcCollectionRef.update(roomWithAnswer);
     
     /* it is trigger at peer(caller) added in DB */
-    this.callerCandidatesCollection.onSnapshot(snapshot => {
+    this.callerUnsubscribe = this.callerCandidatesCollection.onSnapshot(snapshot => {
         snapshot.docChanges().forEach(async change => {
             if (change.type === 'added') {
                 let data = change.doc.data();
@@ -197,7 +208,7 @@ Connection.prototype.startConnection = async function (me) {
     console.log("startConnection " + this.pcName + " caller: " + caller + " callee: " + callee);
 
     /* it is trigger at createAnswer / createOffer... */
-    this.pcCollectionRef.onSnapshot(async snapshot => {
+    this.pcUnsubscribe = this.pcCollectionRef.onSnapshot(async snapshot => {
         const data = snapshot.data();
         await this.setRemoteDescription(this.isCaller, data);
     });
@@ -304,10 +315,6 @@ Connection.prototype.hangup = async function () {
     this.remoteVideo.srcObject = null;
 
     const videosDiv = document.querySelector('#videos-div');
-
-    //videosDiv.removeChild(this.remoteCanvas);
-    //videosDiv.removeChild(this.remoteVideoNameDiv);
-    //videosDiv.removeChild(this.remoteVideo);
     videosDiv.removeChild(this.remoteVideoDiv);
 
     await this.deleteDB();
