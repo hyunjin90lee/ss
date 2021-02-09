@@ -99,3 +99,93 @@ dialog .actions {
     transform: translateX(0);
   }
 }
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  background-color: #f1f1f1;
+}
+
+li {
+  display: block;
+  color: #000;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+li.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+li:hover:not(.active) {
+  background-color: #555;
+  color: white;
+}
+
+.user-btn {
+  width: 50px;
+  height: 50px;
+  margin: 10px;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  z-index: 1;
+  background-image: url("people_3.png");
+  background-color: white;
+  background-size: 90%;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  border-radius: 30%;
+}
+
+.user-btn:hover {
+  box-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+}
+
+.close-btn {
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  z-index: 1;
+  background-image: url("close.png");
+  background-size: 50%;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+}
+
+#userList-div {
+  width: 24.95%;/*150px;*/
+  height: 100%;
+  position: fixed;
+  right: -24.95%;/*-152px;*/
+  top: 0px;
+  z-index: 10;
+  border: 1px solid #c9c9c9;
+  background-color: white;
+  text-align: center;
+
+  transition: All 0.2s ease;
+  -webkit-transition: All 0.2s ease;
+  -moz-transition: All 0.2s ease;
+  -o-transition: All 0.2s ease;
+}
+
+#userList-div.open {
+  right: 0px;
+}
+
+#userList-div h3 {
+  color: black;
+  margin: 10px 0 10px 0;
+  font-weight: bold;
+}
+
+.main {
+  width: 100%;
+}

@@ -7,111 +7,125 @@
 </head>
 <body>
   <h1>Welcome to SS Meeting</h1>
-  <div id="roomInfo"></div>
-  <div id="noticeInfo"></div>
-  <div id="login-div">
-    <p>Please create a new room, or join with your room number</p>
-    <div id="userName-div">
-      <p> Your Name : 
-        <input type="text" id="userName">
-      </p>
-    </div>
-    <div id="room-selection" class="hidden">
-      <p> Room Number :
-        <input type="text" id="targetRoom">
-        <label class="error-label hidden" for="targetRoom" id="targetRoom-label">
-          RoomNumber should be 9 numerical characters in [0-9]
-        </label>
-        <button id="joinButton" disabled>Join Meeting</button>
-      </p>
-    </div>
-    <div>
-      <button id="createButton">Create Random Room</button>
+
+  <div id="option-div" class="hidden">
+    <div class="user-btn" title="participants list"></div>
+    <div id="userList-div">
+      <h3>Participants list</h3>
+      <div class="close-btn"></div>
+      <ul id="userList">
+      </ul>
     </div>
   </div>
 
-  <div id="active-div" class="hidden">
-    <button id="disconnectButton" disabled>Disconnect</button>
-    <input type="checkbox" id="enable-monitor" unchecked/>
-    <label for="enable-monitor">enable performance monitor</label>
+  <div class="main">
+    <div id="roomInfo"></div>
+    <div id="noticeInfo"></div>
+    <div id="login-div">
+      <p>Please create a new room, or join with your room number</p>
+      <div id="userName-div">
+        <p> Your Name : 
+          <input type="text" id="userName">
+        </p>
+      </div>
+      <div id="room-selection" class="hidden">
+        <p> Room Number :
+          <input type="text" id="targetRoom">
+          <label class="error-label hidden" for="targetRoom" id="targetRoom-label">
+            RoomNumber should be 9 numerical characters in [0-9]
+          </label>
+          <button id="joinButton" disabled>Join Meeting</button>
+        </p>
+      </div>
+      <div>
+        <button id="createButton">Create Random Room</button>
+      </div>
+    </div>
+
+    <div id="active-div" class="hidden">
+      <button id="disconnectButton" disabled>Disconnect</button>
+      <input type="checkbox" id="enable-monitor" unchecked/>
+      <label for="enable-monitor">enable performance monitor</label>
+    </div>
+
+    <div id="videos-div" class="hidden">
+      <div id="localvideo-div" class="grid" style="border: solid 2px yellow;">
+        <div id="localvideoName" style="color: yellow"></div>
+        <canvas id="localmonitor" class="monitor" width="320" height="210"></canvas>
+        <canvas id="systemmonitor" class="system-monitor" width="320" height="30"></canvas>
+        <video id="localvideo" width="320" height ="240" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
+      </div>
+    </div>
+    <div id="preview-div" class="hidden row">
+      <div id="call-config" class="column">
+        <button id="connect-device">Connect to Device</button>
+        <button id="share-screen">Share Screen</button>
+      </div>
+      <div class="column">
+        <button id="meet-now" disabled>Meet Now</button>
+      </div>
+    </div>
+    <div id="media-option-div" class="hidden">
+      <hr>
+      <div id="local-media-option-div" class="row">
+        <form id="local-media-option">
+          <h3>Local media option: </h3>
+          <div class="column">
+            Camera/Display:
+            <input type="radio" id="local-video-on" name="local-video" value="true" checked>
+            <label for="local-video-on">ON</label>
+            <input type="radio" id="local-video-off" name="local-video" value="false">
+            <label for="local-video-off">OFF</label><br>
+          </div>
+          <div class="column">
+            Voice/Audio:
+            <input type="radio" id="local-audio-on" name="local-audio" value="true" checked>
+            <label for="local-audio-on">ON</label>
+            <input type="radio" id="local-audio-off" name="local-audio" value="false">
+            <label for="local-audio-off">OFF</label><br><br>
+          </div>
+        </form>
+      </div>
+      <hr>
+      <div id="remote-media-option-div" class="row">
+        <form id="remote-media-option">
+          <h3>Remote media option: </h3>
+          <div class="column">
+            Camera/Display:
+            <input type="radio" id="remote-video-on" name="remote-video" value="true" checked>
+            <label for="remote-video-on">ON</label>
+            <input type="radio" id="remote-video-off" name="remote-video" value="false">
+            <label for="remote-video-off">OFF</label><br>
+          </div>
+          <div class="column">
+            Voice/Audio:
+            <input type="radio" id="remote-audio-on" name="remote-audio" value="true" checked>
+            <label for="remote-audio-on">ON</label>
+            <input type="radio" id="remote-audio-off" name="remote-audio" value="false">
+            <label for="remote-audio-off">OFF</label><br><br>
+          </div>
+        </form>
+      </div>
+      <hr>
+    </div>
+    <div id="errorMsg"></div>
+    <dialog id="remote-dialog">
+      <h3>Hello there! 👋</h3>
+      <p id="dialog-message"></p>
+      <div class="actions">
+        <button id="allow-dialog-btn">Ok!</button>
+        <button id="deny-dialog-btn">Sorry, I can't.</button>
+      </div>
+    </dialog>
+    <dialog id="joinError-dialog">
+      <h3>This Room is already FULL!!</h3>
+      <p>You can't join this room</p>
+      <div class="actions">
+        <button id="return-login-btn">Return</button>
+      </div>
+    </dialog>
   </div>
 
-  <div id="videos-div" class="hidden">
-    <div id="localvideo-div" class="grid" style="border: solid 2px yellow;">
-      <div id="localvideoName" style="color: yellow"></div>
-      <canvas id="localmonitor" class="monitor" width="320" height="210"></canvas>
-      <canvas id="systemmonitor" class="system-monitor" width="320" height="30"></canvas>
-      <video id="localvideo" width="320" height ="240" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
-    </div>
-  </div>
-  <div id="preview-div" class="hidden row">
-    <div id="call-config" class="column">
-      <button id="connect-device">Connect to Device</button>
-      <button id="share-screen">Share Screen</button>
-    </div>
-    <div class="column">
-      <button id="meet-now" disabled>Meet Now</button>
-    </div>
-  </div>
-  <div id="media-option-div" class="hidden">
-    <hr>
-    <div id="local-media-option-div" class="row">
-      <form id="local-media-option">
-        <h3>Local media option: </h3>
-        <div class="column">
-          Camera/Display:
-          <input type="radio" id="local-video-on" name="local-video" value="true" checked>
-          <label for="local-video-on">ON</label>
-          <input type="radio" id="local-video-off" name="local-video" value="false">
-          <label for="local-video-off">OFF</label><br>
-        </div>
-        <div class="column">
-          Voice/Audio:
-          <input type="radio" id="local-audio-on" name="local-audio" value="true" checked>
-          <label for="local-audio-on">ON</label>
-          <input type="radio" id="local-audio-off" name="local-audio" value="false">
-          <label for="local-audio-off">OFF</label><br><br>
-        </div>
-      </form>
-    </div>
-    <hr>
-    <div id="remote-media-option-div" class="row">
-      <form id="remote-media-option">
-        <h3>Remote media option: </h3>
-        <div class="column">
-          Camera/Display:
-          <input type="radio" id="remote-video-on" name="remote-video" value="true" checked>
-          <label for="remote-video-on">ON</label>
-          <input type="radio" id="remote-video-off" name="remote-video" value="false">
-          <label for="remote-video-off">OFF</label><br>
-        </div>
-        <div class="column">
-          Voice/Audio:
-          <input type="radio" id="remote-audio-on" name="remote-audio" value="true" checked>
-          <label for="remote-audio-on">ON</label>
-          <input type="radio" id="remote-audio-off" name="remote-audio" value="false">
-          <label for="remote-audio-off">OFF</label><br><br>
-        </div>
-      </form>
-    </div>
-    <hr>
-  </div>
-  <div id="errorMsg"></div>
-  <dialog id="remote-dialog">
-    <h3>Hello there! 👋</h3>
-    <p id="dialog-message"></p>
-    <div class="actions">
-      <button id="allow-dialog-btn">Ok!</button>
-      <button id="deny-dialog-btn">Sorry, I can't.</button>
-    </div>
-  </dialog>
-  <dialog id="joinError-dialog">
-    <h3>This Room is already FULL!!</h3>
-    <p>You can't join this room</p>
-    <div class="actions">
-      <button id="return-login-btn">Return</button>
-    </div>
-  </dialog>
   
   <!-- The core Firebase JS SDK is always required and must be listed first -->
   <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase-app.js"></script>

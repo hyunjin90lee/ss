@@ -8,6 +8,7 @@ const localvideoName = document.querySelector('#localvideoName');
 const roomSelectionDiv = document.querySelector('#room-selection');
 const previewDiv = document.querySelector('#preview-div');
 const mediaOptionDiv = document.querySelector('#media-option-div');
+const optionDiv = document.querySelector('#option-div');
 
 var AppController = function(){
     console.log("new AppController!!");
@@ -72,6 +73,28 @@ AppController.prototype.init = function() {
             Monitor.getMonitor().stop();
         }
     });
+
+    this.userButton = document.querySelector('.user-btn');
+    this.closeButton = document.querySelector('.close-btn');
+    this.userListDiv = document.querySelector('#userList-div');
+    this.userButton.addEventListener('click', ()=>{
+        console.log('??')
+        var mainDiv = document.querySelector('.main');
+        mainDiv.style.width = `${75}%`;
+        this.userListDiv.classList.add("open");
+        window.location.hash = "#open";
+    });
+    window.onhashchange = function() {
+        if (location.hash != "#open") {
+            this.userListDiv.classList.remove("open")
+        }
+    }
+    this.closeButton.addEventListener('click', () => {
+        var mainDiv = document.querySelector('.main');
+        this.userListDiv.classList.remove("open");
+        mainDiv.style.width = `${100}%`;
+        history.back();
+    })
 
     this.mediaOption = {video: true, audio: true};
     this.userCount = 0;
@@ -170,6 +193,7 @@ AppController.prototype.hangup = async function() {
     this.meetNowButton.disabled = true;
 
     localvideoName.innerHTML = "";
+    this.resetUserList();
     await this.call_.hangup();
     await this.resource_free();
 
@@ -231,6 +255,28 @@ AppController.prototype.prepareDialog = function(target, value) {
     return this.remoteDialog;
 }
 
+AppController.prototype.addUserList = function(name) {
+    var ul = document.querySelector("#userList");
+    var li = document.createElement('li');
+    var text = document.createTextNode(name);
+
+    li.id = `${name}`;
+    li.appendChild(text);
+    ul.append(li);
+}
+
+AppController.prototype.removeUserList = function(name) {
+    var userli = document.querySelector(`#${name}`);
+    userli.remove();
+}
+
+AppController.prototype.resetUserList = function() {
+    var userul = document.querySelector('#userList');
+    while(userul.hasChildNodes()) {
+        userul.removeChild(userul.firstChild);
+    }
+}
+
 AppController.prototype.addUser = async function() {
     this.userUnsubscribe = this.userCollection.onSnapshot(async snapshot => {
         snapshot.docChanges().forEach(async change => {
@@ -239,6 +285,7 @@ AppController.prototype.addUser = async function() {
             if (change.type === 'added') {
                 this.userCount++;
                 console.log(`user Added!! name is : ${data.name}, current users are ${this.userCount}`)
+                this.addUserList(data.name);
                 if (this.user != data.name) {
                     await this.call_.addPeerConnection(this.user, data.name);
                 }
@@ -249,6 +296,7 @@ AppController.prototype.addUser = async function() {
             } else if (change.type === 'removed') {
                 this.userCount--;
                 console.log(`user Removed!! name is : ${data.name}, current users are ${this.userCount}`)
+                this.removeUserList(data.name);
                 if (this.user != data.name) {
                     await this.call_.hangupIt(data.name);
                 }
@@ -328,6 +376,7 @@ AppController.prototype.hideMeetingRoom = function() {
     this.hide_(videosDiv);
     this.hide_(previewDiv);
     this.hide_(activeDiv);
+    this.hide_(optionDiv);
 }
 
 AppController.prototype.showMeetingRoom = function () {
@@ -336,6 +385,7 @@ AppController.prototype.showMeetingRoom = function () {
     this.show_(videosDiv);
     this.show_(previewDiv);
     this.show_(activeDiv);
+    this.show_(optionDiv);
 }
 
 AppController.prototype.showLoginMenu = function () {
