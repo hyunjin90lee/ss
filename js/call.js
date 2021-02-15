@@ -5,11 +5,9 @@ var Call = function (appController) {
     console.log("new Call!");
 
     this.localVideo = document.querySelector('#localvideo');
-    //this.remoteVideo = document.querySelector('#remotevideo');
 
     this.appController_ = appController;
     this.pc_ = [];
-    this.connectionCnt = 0;
     this.stateListeners_ = [];
 }
 
@@ -66,7 +64,6 @@ Call.prototype.gotUserMediaStream = function(streams) {
 
     this.localStream = streams; // make stream available to console
     this.localVideo.srcObject = streams;
-    //this.remoteVideo.srcObject = this.remoteStream;
 
     return true;
 }
@@ -78,7 +75,6 @@ Call.prototype.gotDisplayMediaStream = function(streams) {
     
     this.localStream = streams; // make stream available to console
     this.localVideo.srcObject = streams;
-    //this.remoteVideo.srcObject = this.remoteStream;
     this.localStream.getVideoTracks()[0].addEventListener('ended', () => {
         /*shareButton.disabled = false;*/
         this.onConnectDevice();
@@ -87,15 +83,15 @@ Call.prototype.gotDisplayMediaStream = function(streams) {
 }
 
 Call.prototype.addPeerConnection = async function (me, peer) {
-    var pcIndex = this.connectionCnt++;
-
-    this.pc_[pcIndex] = new Connection(me, peer, this);
+    let connection = new Connection(me, peer, this);
     this.stateListeners_.forEach(listener => {
-        this.pc_[pcIndex].addStateListener(listener);
+        connection.addStateListener(listener);
     });
-    await this.pc_[pcIndex].initConnection();
+    await connection.initConnection();
 
-    await this.pc_[pcIndex].startConnection(me);
+    await connection.startConnection(me);
+
+    this.pc_.push(connection);
 }
 
 Call.prototype.hangup = async function() {
@@ -107,23 +103,29 @@ Call.prototype.hangup = async function() {
             track.stop();
         });
     }
-    
+
     this.localVideo.srcObject = null;
 
-    for (var i=0; i<this.connectionCnt; i++) {
-        await this.pc_[i].hangup();
-        delete this.pc_[i]; /* TBD ?? */
+    for (var i=0; i<this.pc_.length; i++) {
+        console.log(`pc_[${i}].pcName is ${this.pc_[i].pcName}`)
+        if (this.pc_[i]) {
+            await this.pc_[i].hangup();
+            this.pc_.splice(i,1);
+        }
     }
-    this.connectionCnt = 0;
+
+    console.log("Ending call done")
 }
 
 Call.prototype.hangupIt = async function(peer) {
-    for (var i=0; i<this.connectionCnt; i++) {
+    console.log("hangupIt(w/" + peer + ")")
+    for (var i=0; i<this.pc_.length; i++) {
+        console.log(`pc_[${i}].pcName is ${this.pc_[i].pcName}`)
         if (this.pc_[i].peerName == peer) {
             await this.pc_[i].hangup();
-            delete this.pc_[i]; /* TBD ?? */
-            this.connectionCnt--;
+            this.pc_.splice(i,1);
             return;
         }
     }
+    console.log("hangupIt done(w/" + peer + ")")
 }

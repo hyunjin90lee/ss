@@ -21,7 +21,7 @@ var Connection = function (me, peer, call) {
 
     this.localStream = call.localStream;
     this.remoteStream = new MediaStream();
-    this.addRemoteStream(this.call_.connectionCnt, peer);
+    this.addRemoteStream(peer);
 
     this.configuration = {
         iceServers: [
@@ -127,7 +127,7 @@ Connection.prototype.initConnection = async function() {
     });
 }
 
-Connection.prototype.addRemoteStream = function(index, peer) {
+Connection.prototype.addRemoteStream = function(peer) {
     const videosDiv = document.querySelector('#videos-div');
     var canvas = document.createElement('canvas');
     var video = document.createElement('video');
@@ -136,11 +136,11 @@ Connection.prototype.addRemoteStream = function(index, peer) {
 
     div.appendChild(text);
 
-    video.id = `remotevideo${index}`;
+    video.id = `remotevideo${peer}`;
     video.autoplay = true;
     video.playsInline = true;
 
-    canvas.id = `remotemonitor${index}`;
+    canvas.id = `remotemonitor${peer}`;
     canvas.style.zIndex   = 8;
     canvas.style.position = "absolute";
     //canvas.style.border   = "1px solid red";
@@ -315,7 +315,9 @@ Connection.prototype.hangup = async function () {
     this.remoteVideo.srcObject = null;
 
     const videosDiv = document.querySelector('#videos-div');
-    videosDiv.removeChild(this.remoteVideoDiv);
+    if (document.getElementById(this.remoteVideoDiv.id)) {
+        videosDiv.removeChild(this.remoteVideoDiv);
+    }
 
     await this.deleteDB();
 }

@@ -43,7 +43,7 @@
     </div>
 
     <div id="active-div" class="hidden">
-      <button id="disconnectButton" disabled>Disconnect</button>
+      <button id="disconnectButton">Disconnect</button>
       <input type="checkbox" id="enable-monitor" unchecked/>
       <label for="enable-monitor">enable performance monitor</label>
     </div>
@@ -79,6 +79,15 @@
       <p>You can't join this room</p>
       <div class="actions">
         <button id="return-login-btn">Return</button>
+      </div>
+    </dialog>
+    <dialog id="exit-dialog">
+      <h3 id="exit-message"></h3>
+      <div id="exiting-div" class="loader hidden"></div>
+      <div id="exit-button-div" class="actions">
+        <button id="stop-dialog-btn">Stop Meeting</button>
+        <button id="leave-dialog-btn">Leave Meeting</button>
+        <button id="return-meeting-btn">Cancel</button>
       </div>
     </dialog>
   </div>

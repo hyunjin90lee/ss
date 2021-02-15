@@ -8,6 +8,7 @@ const localvideoName = document.querySelector('#localvideoName');
 const roomSelectionDiv = document.querySelector('#room-selection');
 const previewDiv = document.querySelector('#preview-div');
 const optionDiv = document.querySelector('#option-div');
+const exitingDiv = document.querySelector('#exiting-div');
 
 var AppController = function(){
     console.log("new AppController!!");
@@ -39,13 +40,18 @@ AppController.prototype.init = function() {
     this.dialogMessage = document.querySelector('#dialog-message');
     this.remoteDialog = document.querySelector('#remote-dialog');
     this.joinErrorDialog = document.querySelector('#joinError-dialog');
+    this.exitDialog = document.querySelector('#exit-dialog');
     this.returnLoginBtn = document.querySelector('#return-login-btn');
+    this.exitMessage = document.querySelector('#exit-message');
+    this.stopButton = document.querySelector('#stop-dialog-btn');
+    this.leaveButton = document.querySelector('#leave-dialog-btn');
+    this.returnButton = document.querySelector('#return-meeting-btn');
     this.enableMonitorCheck = document.querySelector('#enable-monitor');
 
     this.createButton.addEventListener('click', this.createRandomRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
     this.joinButton.addEventListener('click', this.joinRoom.bind(this));
-    this.disconnectButton.addEventListener('click', this.hangup.bind(this));
+    this.disconnectButton.addEventListener('click', this.disconnectRoom.bind(this));
     this.connectDeviceButton.addEventListener('click', this.onConnectDevice.bind(this));
     this.shareScreenButton.addEventListener('click', this.onShareScreen.bind(this));
     this.meetNowButton.addEventListener('click', this.onMeetNow.bind(this));
@@ -55,6 +61,11 @@ AppController.prototype.init = function() {
                                                 this.hideMeetingRoom();
                                                 this.showLoginMenu();
                                                 this.joinErrorDialog.close();
+                                                });
+    this.stopButton.addEventListener('click', this.stopMeeting.bind(this));
+    this.leaveButton.addEventListener('click', this.hangup.bind(this));
+    this.returnButton.addEventListener('click', ()=>{
+                                                this.exitDialog.close();
                                                 });
     this.enableMonitorCheck.addEventListener('change', function() {
         if (this.checked) {
@@ -145,7 +156,7 @@ AppController.prototype.joinRoom = async function() {
     }
 
     this.infoBox_.resetMessage();
-    this.disconnectButton.disabled = false;
+    this.meetNowButton.disabled = true;
     this.hide_(loginDiv);
     this.show_(videosDiv);
     this.show_(previewDiv);
@@ -175,11 +186,57 @@ AppController.prototype.checkTargetRoom = function() {
     }
 }
 
+AppController.prototype.disconnectRoom = function () {
+    this.hide_(exitingDiv);
+
+    this.stopButton.disabled = false;
+    this.leaveButton.disabled = false;
+    this.returnButton.disabled = false;
+
+    if (this.isHost) {
+        this.exitMessage.innerHTML = "Stop Meeting? or just leave it?"
+        this.show_(this.stopButton);
+        this.show_(this.leaveButton);
+        this.show_(this.returnButton);
+    } else {
+        this.exitMessage.innerHTML = "Do you want to leave it?"
+        this.hide_(this.stopButton);
+        this.show_(this.leaveButton);
+        this.show_(this.returnButton);
+    }
+
+    this.exitDialog.showModal();
+}
+
+AppController.prototype.stopMeeting = async function() {
+    if (!this.isHost) {
+        return;
+    }
+
+    this.show_(exitingDiv);
+    this.exitMessage.innerHTML = "Stopping...";
+    this.stopButton.disabled = true;
+    this.leaveButton.disabled = true;
+    this.returnButton.disabled = true;
+
+    var res = await this.userCollection.get();
+    if (res.size == 0) {
+        await this.hangup();
+        return;
+    }
+    res.docs.forEach(async element => {
+        let data = element.data();
+        await element.ref.delete();
+    });
+}
+
 AppController.prototype.hangup = async function() {
-    this.disconnectButton.disabled = true;
-    this.shareScreenButton.disabled = true;
-    this.connectDeviceButton.disabled = true;
-    this.meetNowButton.disabled = true;
+    if (!this.isHost) {
+        this.show_(exitingDiv);
+        this.exitMessage.innerHTML = "Leaving...";
+        this.leaveButton.disabled = true;
+        this.returnButton.disabled = true;
+    }
 
     localvideoName.innerHTML = "";
     this.resetUserList();
@@ -188,22 +245,30 @@ AppController.prototype.hangup = async function() {
 
     this.infoBox_.resetMessage();
 
+    this.exitDialog.close();
     this.hideMeetingRoom();
     this.showLoginMenu();
 }
 
 AppController.prototype.resource_free = async function () {
-    // TBD : it should be fixed later
     if (this.userRef) {
         await this.userRef.delete();
     }
-    await this.userUnsubscribe();
-    await this.userRefUnsubscribe();
+    if (this.userUnsubscribe) {
+        await this.userUnsubscribe();
+    }
+    if (this.userRefUnsubscribe) {
+        await this.userRefUnsubscribe();
+    }
 
     if (this.participants != undefined) {
         this.participants.length = 0;
     }
 
+    var res = await this.userCollection.get();
+    if (res.size == 0) {
+        await this.roomRef.delete();
+    }
     console.log('resource_free done');
 }
 
@@ -301,7 +366,9 @@ AppController.prototype.addUserList = function(name) {
 
 AppController.prototype.removeUserList = function(name) {
     var userli = document.querySelector(`#${name}`);
-    userli.remove();
+    if (userli) {
+        userli.remove();
+    }
 }
 
 AppController.prototype.resetUserList = function() {
@@ -317,8 +384,7 @@ AppController.prototype.addUser = async function() {
             let data = change.doc.data();
             if (data === undefined) return;
             if (change.type === 'added') {
-                this.userCount++;
-                console.log(`user Added!! name is : ${data.name}, current users are ${this.userCount}`)
+                console.log(`user Added!! name is : ${data.name}`);
                 this.addUserList(data.name);
                 if (this.user != data.name) {
                     await this.call_.addPeerConnection(this.user, data.name);
@@ -327,15 +393,18 @@ AppController.prototype.addUser = async function() {
                     this.participants = [];
                 }
                 this.participants.push(data.name);
+                this.userCount++;
+                console.log(`Now, current users are ${this.userCount}`);
             } else if (change.type === 'removed') {
-                this.userCount--;
-                console.log(`user Removed!! name is : ${data.name}, current users are ${this.userCount}`)
+                console.log(`user Removed!! name is : ${data.name}`);
                 this.removeUserList(data.name);
                 if (this.user != data.name) {
                     await this.call_.hangupIt(data.name);
                 }
+                this.userCount--;
+                console.log(`Now, current users are ${this.userCount}`);
                 if (this.userCount == 0) {
-                    await this.roomRef.delete();
+                    await this.hangup();
                 }
             }
         })
@@ -406,8 +475,6 @@ AppController.prototype.showLoginMenu = function () {
     this.joinButton.disabled = false;
     this.targetRoom.disabled = false;
     this.targetRoom.value = "";
-    this.connectDeviceButton.disabled = false;
-    this.shareScreenButton.disabled = false;
 
     this.isHost = false;
     this.userCount = 0;
