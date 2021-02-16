@@ -83,7 +83,6 @@ AppController.prototype.init = function() {
     this.closeButton = document.querySelector('.close-btn');
     this.userListDiv = document.querySelector('#userList-div');
     this.userButton.addEventListener('click', ()=>{
-        console.log('??')
         var mainDiv = document.querySelector('.main');
         mainDiv.style.width = `${75}%`;
         this.userListDiv.classList.add("open");

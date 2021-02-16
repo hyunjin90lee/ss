@@ -13,12 +13,23 @@
     <div id="userList-div">
       <h3>Participants list</h3>
       <div class="close-btn"></div>
-      <ul id="userList">
-      </ul>
-      <div class="msg-div">
-        <textarea id="chat-all-msg-textarea" cols="30" rows="10"></textarea>
-        <textarea id="chat-input-msg-textarea" cols="30" rows="10"></textarea>
-        <button id="chat-msg-send-button" class="msg-button">Send</button>
+      <div style="overflow:auto; height:50%">
+        <ul id="userList">
+        </ul>
+      </div>
+      <div id="chat-div">
+        <h3>Chat</h3>
+        <textarea id="chat-all-msg-textarea" class=msg-textarea rows="10"></textarea>
+        <div class="chat-selectbox">
+          <label for="select" style="color: black; margin-left:0.5em">To: </label>
+          <select id="select" style="width:60%">
+            <option selected>All</option>
+          </select>
+          <button id="chat-msg-send-button" class="msg-button">Send</button>
+        </div>
+        <div class="msg-send-div">
+          <textarea id="chat-input-msg-textarea" class=msg-textarea rows="2" placeholder="Send your message here"></textarea>
+        </div>
       </div>
     </div>
   </div>
