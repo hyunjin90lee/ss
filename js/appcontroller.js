@@ -34,6 +34,9 @@ AppController.prototype.init = function() {
     this.connectDeviceButton = document.querySelector('#connect-device');
     this.shareScreenButton = document.querySelector('#share-screen');
     this.meetNowButton = document.querySelector('#meet-now');
+    this.chatTextBox = document.querySelector('#chat-all-msg-textarea');
+    this.chatInputTextBox = document.querySelector('#chat-input-msg-textarea');
+    this.chatSendButton = document.querySelector('#chat-msg-send-button');
     this.targetRoomLabel = document.querySelector('#targetRoom-label');
     this.allowDialogBtn = document.querySelector('#allow-dialog-btn');
     this.denyDialogBtn = document.querySelector('#deny-dialog-btn');
@@ -74,6 +77,7 @@ AppController.prototype.init = function() {
             Monitor.getMonitor().stop();
         }
     });
+    this.chatSendButton.addEventListener('click', this.sendChatMessage.bind(this));
 
     this.userButton = document.querySelector('.user-btn');
     this.closeButton = document.querySelector('.close-btn');
@@ -105,6 +109,19 @@ AppController.prototype.init = function() {
 
     Monitor.getMonitor().addSystemMonitor("systemmonitor", "localvideo");
     this.call_.addStateListener(Monitor.onStateChanged);
+}
+
+AppController.prototype.sendChatMessage = async function () {
+    if (this.chatInputTextBox.value.length == 0) {
+        return;
+    }
+    this.chatTextBox.value += "Me: " + this.chatInputTextBox.value + "\n";
+    this.call_.sendChatMessage(this.user + ": " + this.chatInputTextBox.value + "\n");
+    this.chatInputTextBox.value = '';
+}
+
+AppController.prototype.receiveMessage = function(msg) {
+    this.chatTextBox.value += msg;
 }
 
 AppController.prototype.onVisibilityChange = function() {
@@ -238,6 +255,8 @@ AppController.prototype.hangup = async function() {
         this.returnButton.disabled = true;
     }
 
+    this.chatTextBox.value = "";
+    this.chatInputTextBox = "";
     localvideoName.innerHTML = "";
     this.resetUserList();
     await this.call_.hangup();
@@ -446,7 +465,7 @@ AppController.prototype.onMeetNow = async function() {
         return ;
     }
 
-    await this.addUser(); /* TBD: it will be merged with addControlMedia~~ soon */
+    await this.addUser();
     
     this.hide_(previewDiv);
     this.showMeetingRoom();

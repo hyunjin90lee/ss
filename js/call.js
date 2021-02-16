@@ -11,6 +11,17 @@ var Call = function (appController) {
     this.stateListeners_ = [];
 }
 
+Call.prototype.receiveMessage = function(event) {
+    console.log("receiveMessage: " + event.data);// + this.targetFile['name'] + "-" + this.targetFile['size'] + "/" + this.receivedSize );
+    this.appController_.receiveMessage(event.data);
+}
+
+Call.prototype.sendChatMessage = function(msg) {
+    console.log("sendChatMessage: " + msg);
+    if (this.pc_.length === 0) return;
+    this.pc_.forEach(p => p.sendChatMessage(msg));
+}
+
 Call.prototype.addStateListener = function(listener) {
     this.stateListeners_.push(listener);
 }

@@ -96,10 +96,32 @@ Connection.prototype.addCandidateDB = function (isCaller, candidate) {
     }
 }
 
+
+Connection.prototype.sendChatMessage = function(msg) {
+    if (this.sendChannel === undefined) return;
+    this.sendChannel.send(msg);
+}
+
+Connection.prototype.createDataChannel = async function() {
+    this.sendChannel = await this.peerConnection.createDataChannel('sendDataChannel');
+    this.sendChannel.binaryType = 'arraybuffer';
+    this.sendChannel.addEventListener('open', ()=>{
+        console.log("RtcDataChannel is opened");
+    });
+    this.sendChannel.addEventListener('close', ()=>{
+        console.log("RtcDataChannel is closed");
+    }
+    );
+    this.sendChannel.addEventListener('error',
+        (err)=>console.log("Failed to create RtcDataChannel,  name: " + err.name
+        + ",  message" + err.message));
+}
+
 Connection.prototype.initConnection = async function() {
     await this.initDB(this.pcName);
     
     this.peerConnection = new RTCPeerConnection(this.configuration);
+    this.createDataChannel();
     this.registerPeerConnectionListeners();
     
     this.localStream.getVideoTracks().forEach(track =>
@@ -124,6 +146,16 @@ Connection.prototype.initConnection = async function() {
             console.log('Add a track to the remoteStream:', track);
             this.remoteStream.addTrack(track);
         });
+    });
+
+    this.peerConnection.addEventListener('datachannel', event => {
+        this.receiveChannel = event.channel;
+        this.receiveChannel.onmessage = (event) => {
+            console.log("receive channel receive message");
+            this.call_.receiveMessage(event);
+        };
+        this.receiveChannel.onopen = ()=>console.log("receive channel is opened");
+        this.receiveChannel.onclose = ()=>console.log("receive channel is closed");
     });
 }
 
@@ -302,6 +334,12 @@ Connection.prototype.hangup = async function () {
         console.log("Stop remote tracks. Size: " + this.remoteStream.getTracks().length);
         this.remoteStream.getTracks().forEach(track => track.stop());
         this.remoteStream = new MediaStream();
+    }
+    if (this.sendChannel) {
+        this.sendChannel.close();
+    }
+    if (this.receiveChannel) {
+        this.receiveChannel.close();
     }
     if (this.peerConnection) {
         this.peerConnection.close();
