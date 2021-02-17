@@ -9,6 +9,8 @@ const roomSelectionDiv = document.querySelector('#room-selection');
 const previewDiv = document.querySelector('#preview-div');
 const optionDiv = document.querySelector('#option-div');
 const exitingDiv = document.querySelector('#exiting-div');
+const userUl = document.querySelector("#userList");
+const userSt = document.querySelector('#select');
 
 var AppController = function(){
     console.log("new AppController!!");
@@ -114,8 +116,21 @@ AppController.prototype.sendChatMessage = async function () {
     if (this.chatInputTextBox.value.length == 0) {
         return;
     }
+
+    var targetUser = userSt.options[userSt.selectedIndex].value;
+    var privateMessage;
+    if (userSt.selectedIndex != 0) { /* private */
+        privateMessage = `[${this.user}=>${targetUser}] `;
+        this.chatTextBox.value += privateMessage;
+    }
     this.chatTextBox.value += "Me: " + this.chatInputTextBox.value + "\n";
-    this.call_.sendChatMessage(this.user + ": " + this.chatInputTextBox.value + "\n");
+
+    if (userSt.selectedIndex == 0) {
+        this.call_.sendChatMessageAll(this.user + ": " + this.chatInputTextBox.value + "\n");
+    } else {
+        this.call_.sendChatMessage(targetUser, privateMessage + this.user + ": " + this.chatInputTextBox.value + "\n");
+    }
+
     this.chatInputTextBox.value = '';
 }
 
@@ -364,14 +379,18 @@ AppController.prototype.updateVideoAudioOption = function(name, type) {
 }
 
 AppController.prototype.addUserList = function(name) {
-    var ul = document.querySelector("#userList");
     var li = document.createElement('li');
-    var text = document.createTextNode(name);
+    var text;
 
     li.id = `${name}`;
+    if (this.user == name) {
+        text = document.createTextNode(`${name} [ME]`)
+    } else {
+        text = document.createTextNode(name);
+    }
     li.appendChild(text);
     this.appendDropDownMenu(li, name);
-    ul.append(li);
+    userUl.append(li);
     li.addEventListener('click', () => {
         let dropdown = document.querySelector("#dropdown-menu-" + `${name}`);
         if (dropdown.classList.contains('hidden')) {
@@ -380,6 +399,14 @@ AppController.prototype.addUserList = function(name) {
             this.hide_(dropdown);
         }
     });
+
+    if (this.user != name) {
+        var op = document.createElement('option');
+        var textop = document.createTextNode(name);
+        op.id = `${name}_op`;
+        op.appendChild(textop);
+        userSt.append(op);
+    }
 }
 
 AppController.prototype.removeUserList = function(name) {
@@ -387,12 +414,22 @@ AppController.prototype.removeUserList = function(name) {
     if (userli) {
         userli.remove();
     }
+    var userOp = document.querySelector(`#${name}_op`);
+    if (userOp) {
+        userOp.remove();
+    }
 }
 
 AppController.prototype.resetUserList = function() {
-    var userul = document.querySelector('#userList');
-    while(userul.hasChildNodes()) {
-        userul.removeChild(userul.firstChild);
+    while(userUl.hasChildNodes()) {
+        userUl.removeChild(userUl.firstChild);
+    }
+
+    while(userSt.hasChildNodes()) {
+        if (userSt.lastChild.index == 0) {
+            return; /* don't remove the first child --ALL--*/
+        }
+        userSt.removeChild(userSt.lastChild);
     }
 }
 
