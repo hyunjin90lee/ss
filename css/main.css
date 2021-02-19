@@ -213,7 +213,7 @@ li:hover:not(.active) {
   position: absolute;
   bottom: 0px;
   border: 1px solid #c9c9c9;
-  background-color: rgb(247, 246, 202);
+  background-color: papayawhip
 }
 
 .main {
@@ -252,4 +252,28 @@ li:hover:not(.active) {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(359deg); }
+}
+
+.div-blink {
+  -webkit-animation: div-blink 1.0s linear 10;
+}
+
+@keyframes div-blink {
+  0% {background-color:papayawhip;}
+  100% {background-color: rgb(255, 137, 137);}
+}
+
+.icon-blink {
+  -webkit-animation: icon-blink 1.0s linear infinite;
+}
+
+@keyframes icon-blink {
+  0% {
+    box-shadow: 0 0 0px rgba(255, 255, 0, 0.8);
+    background-color: papayawhip
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+    background-color: rgb(255, 137, 137);
+  }
 }

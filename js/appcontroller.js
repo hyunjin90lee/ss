@@ -102,6 +102,14 @@ AppController.prototype.init = function() {
         history.back();
     })
 
+    this.chatDiv = document.querySelector('#chat-div');
+    this.chatDiv.addEventListener('click', () => {
+        if (this.msgAlert) {
+            this.msgAlert = false;
+            this.chatDiv.classList.remove('div-blink');
+            this.userButton.classList.remove('icon-blink');
+        }
+    })
     this.mediaOption = {video: true, audio: true};
     this.userCount = 0;
     this.isHost = false;
@@ -136,6 +144,10 @@ AppController.prototype.sendChatMessage = async function () {
 
 AppController.prototype.receiveMessage = function(msg) {
     this.chatTextBox.value += msg;
+
+    this.msgAlert = true;
+    this.chatDiv.classList.add('div-blink');
+    this.userButton.classList.add('icon-blink');
 }
 
 AppController.prototype.onVisibilityChange = function() {
