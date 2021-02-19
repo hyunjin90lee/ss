@@ -11,6 +11,7 @@ const optionDiv = document.querySelector('#option-div');
 const exitingDiv = document.querySelector('#exiting-div');
 const userUl = document.querySelector("#userList");
 const userSt = document.querySelector('#select');
+const qrImg = document.querySelector('.qr-div img');
 
 var AppController = function(){
     console.log("new AppController!!");
@@ -164,8 +165,11 @@ AppController.prototype.createRandomRoom = async function() {
 
     this.isHost = true; /* TODO: isHost setting time */
     this.targetRoom.value = roomNumber;
-    this.checkTargetRoom();
-    this.targetRoom.disabled = true;
+    if (this.checkTargetRoom()) {
+        this.targetRoom.disabled = true;
+        let imgSrc = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+roomNumber;
+        qrImg.src = imgSrc;
+    }
 }
 
 AppController.prototype.joinRoom = async function() {
@@ -223,9 +227,11 @@ AppController.prototype.checkTargetRoom = function() {
             this.joinButton.disabled = true;
             this.show_(this.targetRoomLabel);
         }
+        return valid;
     } else {
         this.createButton.disabled = false;
         this.joinButton.disabled = true;
+        return false;
     }
 }
 

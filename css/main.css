@@ -277,3 +277,7 @@ li:hover:not(.active) {
     background-color: rgb(255, 137, 137);
   }
 }
+
+.qr-div img {
+  width: 200px;
+}
