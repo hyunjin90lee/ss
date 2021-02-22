@@ -50,10 +50,15 @@ var Connection = function (me, peer, call) {
     this.videoSenders = [];
     this.audioSenders = [];
     this.stateListeners = [];
+    this.streamListeners = [];
 }
 
 Connection.prototype.addStateListener = function(listener) {
     this.stateListeners.push(listener);
+}
+
+Connection.prototype.addStreamListener = function(listener) {
+    this.streamListeners.push(listener);
 }
 
 Connection.prototype.initDB = async function (pcName) {
@@ -124,10 +129,10 @@ Connection.prototype.initConnection = async function() {
     this.createDataChannel();
     this.registerPeerConnectionListeners();
     
-    this.localStream.getVideoTracks().forEach(track =>
-        this.videoSenders.push(this.peerConnection.addTrack(track, this.localStream)));
-    this.localStream.getAudioTracks().forEach(track =>
-        this.audioSenders.push(this.peerConnection.addTrack(track, this.localStream)));
+    this.localStream.getTracks().forEach(track => {
+        if (track.kind == 'audio') this.audioSenders.push(this.peerConnection.addTrack(track));
+        else this.videoSenders.push(this.peerConnection.addTrack(track));
+    });
 
     /* it is triggered at its own setLocalDescription */
     this.peerConnection.addEventListener('icecandidate', event => {
@@ -141,10 +146,10 @@ Connection.prototype.initConnection = async function() {
 
     /* this is triggered at its setRemoteDescription */
     this.peerConnection.addEventListener('track', event => {
-        console.log('Got remote track:', event.streams[0]);
-        event.streams[0].getTracks().forEach(track => {
-            console.log('Add a track to the remoteStream:', track);
-            this.remoteStream.addTrack(track);
+        this.remoteStream.addTrack(event.track);
+        if (event.track.kind == "video") return;
+        this.streamListeners.forEach(listener => {
+            listener("connected", this.remoteCanvas.id, this.remoteStream);
         });
     });
 
@@ -347,6 +352,10 @@ Connection.prototype.hangup = async function () {
 
     //TODO: remove listener call if "disconnected" event of connectionstatechange occurs correctly.
     this.stateListeners.forEach(listener => {
+        listener("disconnected", this.remoteCanvas.id);
+    });
+
+    this.streamListeners.forEach(listener => {
         listener("disconnected", this.remoteCanvas.id);
     });
 
