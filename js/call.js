@@ -17,10 +17,22 @@ Call.prototype.receiveMessage = function(event) {
     this.appController_.receiveMessage(event.data);
 }
 
-Call.prototype.sendChatMessage = function(msg) {
-    console.log("sendChatMessage: " + msg);
+Call.prototype.sendChatMessageAll = function(msg) {
+    console.log("sendChatMessageAll: " + msg);
     if (this.pc_.length === 0) return;
     this.pc_.forEach(p => p.sendChatMessage(msg));
+}
+
+Call.prototype.sendChatMessage = function(target, msg) {
+    console.log("sendChatMessage to " + target + ": " + msg);
+    if (this.pc_.length === 0) return;
+
+    for (var i=0; i<this.pc_.length; i++) {
+        if (this.pc_[i].peerName == target) {
+            this.pc_[i].sendChatMessage(msg);
+            break;
+        }
+    }
 }
 
 Call.prototype.addStateListener = function(listener) {
