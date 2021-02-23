@@ -45,7 +45,7 @@ class BaseDetector {
 class SoundDetector extends BaseDetector {
     constructor(canvasId, audioStream, audioContext) {
         super(canvasId);
-        console.log("[HJ] SoundDetector");
+        console.log("new SoundDetector!!");
         this.data = new StreamDetectingData();
         this.audioStream = audioStream;
         this.audioContext = audioContext;
@@ -66,7 +66,7 @@ class SoundDetector extends BaseDetector {
 
     drawData = () => {
         if (window.ctx == undefined) return;
-        window.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        window.ctx.clearRect(this.xPos, this.padding, this.imgWidth, this.imgHeight);
         window.ctx.save();
         window.ctx.fillStyle = "red";
         window.ctx.fillRect(this.xPos, this.padding, this.imgWidth, this.imgHeight);
@@ -90,27 +90,33 @@ class SoundDetector extends BaseDetector {
 
     updateData = (event) => {
         const input = event.inputBuffer.getChannelData(0);
-        let i;
-        let sum = 0.0;
-        for (i = 0; i < input.length; ++i) {
-            sum += input[i] * input[i];
-        }
-        this.data.instant = (sum / input.length * 100).toFixed(2);
+        this.data.instant = (Math.max(...input) * 10).toFixed(2);
         this.data.slow = 0.95 * this.data.slow + 0.05 * this.data.instant;
-        this.drawData();
     }
+
+    clearData = () => {
+        super.clearData();
+        this.mic.disconnect(this.script);
+        this.script.disconnect(this.audioContext.destination);
+    }
+}
+
+function detectingStart(detector) {
+    detector.detecting();
 }
 
 var gDetector = null;
 class Detector {
     constructor(audioContext) {
-        console.log('[HJ] new Detector!!');
+        console.log('new Detector!!');
         this.detectors = [];
         this.audioContext = audioContext;
+        this.timerId = null;
     }
 
     start() {
         console.log('start detectors');
+        this.timerId = setInterval(detectingStart, 1000, this);
     }
 
     stop() {
@@ -136,6 +142,10 @@ class Detector {
 
     detecting() {
         console.log('detectors:', this.detectors.length);
+        this.detectors.forEach(function (detector) {
+            detector.detecting();
+            detector.drawData();
+        });
     }
 
     static getDetector(...params) {
