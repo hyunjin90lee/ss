@@ -40,25 +40,26 @@
     <div id="login-div">
       <p>Please create a new room, or join with your room number</p>
       <div id="userName-div">
-        <p> Your Name : 
-          <input type="text" id="userName">
-        </p>
+        <input type="text" id="userName" placeholder="Name" style="width:300px">
       </div>
       <div id="room-selection" class="hidden">
-        <p> Room Number :
-          <input type="text" id="targetRoom">
+        <div>
+          <input type="text" id="targetRoom" placeholder="Room Number" style="width:300px">
           <label class="error-label hidden" for="targetRoom" id="targetRoom-label">
             RoomNumber should be 9 numerical characters in [0-9]
           </label>
-          <button id="joinButton" disabled>Join Meeting</button>
-        </p>
-        <div class="qr-div">
+          <button id="joinButton" disabled>Join Room</button>
+          <button id="qrJoinButton" class="qrImage-btn">.</button>
+        </div>
+        <br>
+        <div class="qr-div" style="border: solid 1px silver; width:200px; height:200px">
           <img src="">
         </div>
       </div>
       <div>
-        <button id="createButton">Create Random Room</button>
+        <button id="createButton">Create New Room</button>
       </div>
+      <div style="width: 500px" id="reader" class="hidden"></div>
     </div>
 
     <div id="active-div" class="hidden">
@@ -124,6 +125,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.2.2/firebase-analytics.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <script src="lib/html5-qrcode.min.js"></script>
   <script src="js/monitor.js"></script>
   <script src="js/detector.js"></script>
   <script src="js/appcontroller.js"></script>

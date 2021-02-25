@@ -9,6 +9,7 @@ const roomSelectionDiv = document.querySelector('#room-selection');
 const previewDiv = document.querySelector('#preview-div');
 const optionDiv = document.querySelector('#option-div');
 const exitingDiv = document.querySelector('#exiting-div');
+const qrReaderDiv = document.querySelector('#reader');
 const userUl = document.querySelector("#userList");
 const userSt = document.querySelector('#select');
 const qrImg = document.querySelector('.qr-div img');
@@ -33,6 +34,7 @@ AppController.prototype.init = function() {
     this.createButton = document.querySelector('#createButton');
     this.targetRoom = document.querySelector('#targetRoom');
     this.joinButton = document.querySelector('#joinButton');
+    this.qrCheckInButton = document.querySelector('#qrJoinButton');
     this.disconnectButton = document.querySelector('#disconnectButton');
     this.connectDeviceButton = document.querySelector('#connect-device');
     this.shareScreenButton = document.querySelector('#share-screen');
@@ -57,6 +59,7 @@ AppController.prototype.init = function() {
     this.createButton.addEventListener('click', this.createRandomRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
     this.joinButton.addEventListener('click', this.joinRoom.bind(this));
+    this.qrCheckInButton.addEventListener('click', this.qrCheckIn.bind(this));
     this.disconnectButton.addEventListener('click', this.disconnectRoom.bind(this));
     this.connectDeviceButton.addEventListener('click', this.onConnectDevice.bind(this));
     this.shareScreenButton.addEventListener('click', this.onShareScreen.bind(this));
@@ -131,6 +134,7 @@ AppController.prototype.init = function() {
     }
 }
 
+
 AppController.prototype.sendChatMessage = async function () {
     if (this.chatInputTextBox.value.length == 0) {
         return;
@@ -177,6 +181,7 @@ AppController.prototype.createRandomRoom = async function() {
     this.targetRoom.value = roomNumber;
     if (this.checkTargetRoom()) {
         this.targetRoom.disabled = true;
+        this.qrCheckInButton.disabled = true;
         let imgSrc = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+roomNumber;
         qrImg.src = imgSrc;
     }
@@ -200,7 +205,7 @@ AppController.prototype.joinRoom = async function() {
             console.log(`Room #${this.roomId} is already created. Choose another room number`);
             this.infoBox_.roomExistErrorMessage(this.roomId);
             this.showLoginMenu();
-            return;
+            return false;
         }
         await this.roomRef.set({created: true}); // new room created
     } else {
@@ -208,7 +213,7 @@ AppController.prototype.joinRoom = async function() {
             console.log(`You cannot join this room ${this.roomId} - It's not exists`);
             this.infoBox_.loginErrorMessage(this.roomId);
             this.showLoginMenu();
-            return;
+            return false;
         }
     }
 
@@ -220,25 +225,51 @@ AppController.prototype.joinRoom = async function() {
     this.show_(activeDiv);
     this.infoBox_.loginRoomMessage(this.isHost, this.roomId);
     Detector.getDetector().start();
+
+    return true;
+}
+
+AppController.prototype.qrCheckIn = function() {
+    this.html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    this.html5QrcodeScanner.render(this.onScanSuccess.bind(this));
+
+    this.show_(qrReaderDiv);
+}
+
+AppController.prototype.onScanSuccess = async function(qrCodeMessage) {
+    console.log('qrCodeMessage is: ' + qrCodeMessage);
+
+    this.targetRoom.value = qrCodeMessage;
+
+    if (this.checkTargetRoom()) {
+        var joinRoom = await this.joinRoom();
+        if (joinRoom == true) {
+            this.hide_(qrReaderDiv);
+            this.html5QrcodeScanner.clear();
+            return;
+        }
+    }
 }
 
 AppController.prototype.checkTargetRoom = function() {
     var roomNumber = this.targetRoom.value;
+    console.log('2'+ this.targetRoom.value);
+    console.log('3'+ roomNumber)
+    console.log('4 '+ roomNumber.length)
 
     if (roomNumber.length > 0) {
         this.createButton.disabled = true;
 
         var re = /^[0-9]+$/;
-        var valid = (roomNumber.length == 9) && re.exec(roomNumber);
-
-        if (valid) {
+        var validValue = (roomNumber.length == 9) && re.exec(roomNumber);
+        if (validValue) {
             this.joinButton.disabled = false;
             this.hide_(this.targetRoomLabel);
         } else {
             this.joinButton.disabled = true;
             this.show_(this.targetRoomLabel);
         }
-        return valid;
+        return validValue; /* return false or valid Room Number */
     } else {
         this.createButton.disabled = false;
         this.joinButton.disabled = true;
@@ -558,6 +589,7 @@ AppController.prototype.showMeetingRoom = function () {
 AppController.prototype.showLoginMenu = function () {
     this.createButton.disabled = false;
     this.joinButton.disabled = false;
+    this.qrCheckInButton.disabled = false;
     this.targetRoom.disabled = false;
     this.targetRoom.value = "";
 

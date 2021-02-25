@@ -166,6 +166,17 @@ li:hover:not(.active) {
   box-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
 }
 
+.qrImage-btn {
+  width: 25px;
+  height: 25px;
+  background-image: url("qrImage.png");
+  background-size: 90%;
+  background-color: rgb(147 30 30);
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+}
+
 .close-btn {
   width: 50px;
   height: 50px;
