@@ -10,6 +10,7 @@ const previewDiv = document.querySelector('#preview-div');
 const optionDiv = document.querySelector('#option-div');
 const exitingDiv = document.querySelector('#exiting-div');
 const qrReaderDiv = document.querySelector('#reader');
+const captionDiv = document.querySelector('#caption-div');
 const userUl = document.querySelector("#userList");
 const userSt = document.querySelector('#select');
 const qrImg = document.querySelector('.qr-div img');
@@ -55,6 +56,7 @@ AppController.prototype.init = function() {
     this.leaveButton = document.querySelector('#leave-dialog-btn');
     this.returnButton = document.querySelector('#return-meeting-btn');
     this.enableMonitorCheck = document.querySelector('#enable-monitor');
+    this.captionButton = document.querySelector('#caption');
 
     this.createButton.addEventListener('click', this.createRandomRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
@@ -76,6 +78,7 @@ AppController.prototype.init = function() {
     this.returnButton.addEventListener('click', ()=>{
                                                 this.exitDialog.close();
                                                 });
+    this.captionButton.addEventListener('click', this.enableCaption.bind(this));
     this.enableMonitorCheck.addEventListener('change', function() {
         if (this.checked) {
             Monitor.getMonitor().start();
@@ -117,6 +120,7 @@ AppController.prototype.init = function() {
     this.mediaOption = {video: true, audio: true};
     this.userCount = 0;
     this.isHost = false;
+    this.captionOn = false;
     this.db = firebase.firestore();
     this.show_(roomSelectionDiv);
 
@@ -568,6 +572,32 @@ AppController.prototype.onMeetNow = async function() {
     this.showMeetingRoom();
 }
 
+AppController.prototype.enableCaption = function() {
+    if (!this.recognition_) {
+        this.recognition_ = new Recognition();
+        this.recognition_.updateCaptionStatus = function(status) {
+            if (this.captionOn == status) {
+                console.log('caption status is same with current '
+                            + this.captionOn + " == " + status);
+            } else {
+                this.captionOn = status;
+                if (status == true) {
+                    this.captionButton.classList.add('on');
+                } else {
+                    this.captionButton.classList.remove('on');
+                }
+                console.log('caption status chaged to '+ this.captionOn);
+            }
+        }.bind(this)
+    }
+    
+    if (this.captionOn == true) {
+        this.recognition_.stop();
+    } else {
+        this.recognition_.start();
+    }
+}
+
 AppController.prototype.hideMeetingRoom = function() {
     this.meetNowButton.disabled = false;
     this.show_(loginDiv);
@@ -584,6 +614,7 @@ AppController.prototype.showMeetingRoom = function () {
     this.show_(previewDiv);
     this.show_(activeDiv);
     this.show_(optionDiv);
+    //this.show_(captionDiv);
 }
 
 AppController.prototype.showLoginMenu = function () {

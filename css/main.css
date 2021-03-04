@@ -292,3 +292,27 @@ li:hover:not(.active) {
 .qr-div img {
   width: 200px;
 }
+
+#caption-div {
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  height: 150px;
+  border: solid 1px #000;
+  border-radius: 6px;
+}
+#caption-div span {
+  line-height: 1.5;
+}
+
+#caption span {
+  display: inline-block;
+  margin: 1px 0 0 5px;
+  width: 10px;
+  height: 10px;
+  border: solid 1px #fff;
+  background: #bbb;
+  border-radius: 50%;
+}
+#caption.on span {
+  background: green;
+}
