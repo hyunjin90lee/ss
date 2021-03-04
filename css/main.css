@@ -12,6 +12,9 @@ body {
 video {
   max-width: 100%;
   width: 320px;
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+  -moz-transform: rotateY(180deg);
 }
 
 .monitor {
