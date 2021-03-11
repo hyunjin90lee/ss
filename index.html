@@ -77,15 +77,13 @@
       </div>
     </div>
     <div id="videos-div" class="hidden">
-      <div id="localvideo-div" class="grid" style="border: solid 2px yellow;">
-        <div id="localvideoName" style="color: yellow"></div>
-        <canvas id="localmonitor" class="monitor" width="320" height="210"></canvas>
-        <canvas id="systemmonitor" class="system-monitor" width="320" height="30"></canvas>
-        <video id="localvideo" width="320" height ="240" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
-      </div>
-      <div style="display:none;">
-        <img id="sound-image" width="32" height="32"
-             src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Speaker_Icon.svg/600px-Speaker_Icon.svg.png">
+      <div id="local-container-div" class="bottom-right">
+        <div id="local-div" style="position: relative;">
+          <div id="localvideoName" style="color: yellow"></div>
+          <canvas id="localmonitor" class="monitor" width="320" height="210"></canvas>
+          <canvas id="systemmonitor" class="system-monitor" width="320" height="30"></canvas>
+          <video id="localvideo" style="width: 50%; height: 50%;" autoplay playsinline muted></video>
+        </div>
       </div>
     </div>
     <div id="caption-div" class='hidden'>
