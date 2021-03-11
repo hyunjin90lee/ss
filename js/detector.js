@@ -1,5 +1,15 @@
 'use strict';
 
+let loaded = false;
+Promise.all([
+    faceapi.nets.tinyFaceDetector.loadFromUri(
+      "./res/models"
+    ),
+    faceapi.nets.faceRecognitionNet.loadFromUri(
+      "./res/models"
+    )
+]).then(()=>loaded = true);
+
 class DetectingData {
     constructor() {
     }
@@ -13,38 +23,109 @@ class StreamDetectingData extends DetectingData {
     constructor() {
         super();
         this.instant = 0;
-        this.slow = 0;
     }
 
     toString() {
-        return "instant: " + this.instant + ", slow: " + this.slow;
+        return "instant: " + this.instant;
+    }
+}
+
+
+class FaceDetectingData extends DetectingData {
+    constructor() {
+        super();
+        this.x = 0;
+        this.y = 0;
+        this.size = 0;
+    }
+
+    toString() {
+        return "x: " + this.x + ", y: " + this.y + ", size: " + this.size;
     }
 }
 
 class BaseDetector {
-    constructor(canvasId) {
-        this.canvas = document.querySelector("#" + canvasId);
-        this.canvasId = canvasId;
+    constructor() {
         this.data = null;
     }
 
-    drawData() {
-        return;
-    }
-
     clearData() {
-        var ctx = this.canvas.getContext('2d');
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     detecting() {
         return;
     }
+
+    async insert(chunk, controller) {
+    }
+
+    addSenderStream(senderStream) {
+    }
+}
+
+class FaceDetector extends BaseDetector {
+    constructor(videoElement) {
+        super();
+        console.log("new FaceDetector!!");
+        this.options = new faceapi.TinyFaceDetectorOptions({ 
+            inputSize	: 320,
+            scoreThreshold  : 0.50
+        });
+        this.videoElement = videoElement;
+        this.data = new FaceDetectingData();
+    }
+
+    insert = async (chunk, controller) => {
+        try {
+            let metadata;
+            if (this.data.size == 0) {
+                metadata = new ArrayBuffer (1);
+                const view = new DataView (metadata);
+                view.setUint8 (0, 0);
+            } else {
+                metadata = new ArrayBuffer (5);
+                const view = new DataView (metadata);
+                view.setUint16 (0, this.data.x );
+                view.setUint16 (2, this.data.y );
+                view.setUint8 (4, this.data.size/16 + 1);
+            }
+            const frame = chunk.data;
+            chunk.data = new ArrayBuffer(metadata.byteLength + chunk.data.byteLength);
+            const data = new Uint8Array (chunk.data);
+            data.set(new Uint8Array (frame), 0);
+            data.set (new Uint8Array (metadata), frame.byteLength);
+            controller.enqueue (chunk);
+        } catch (e) {
+            console.error (e);
+        }
+    }
+
+    addSenderStream = (senderStream)=>{
+        let readableStream = senderStream.readableStream;
+        let writableStream = senderStream.writableStream;
+        const transformStream = new TransformStream ({transform: this.insert});
+		readableStream
+				.pipeThrough (transformStream)
+				.pipeTo (writableStream);
+    }
+
+    detecting = async () => {
+        const result = await faceapi.detectSingleFace(
+            this.videoElement, this.options);
+        if (result) {
+            this.data.size = Math.max(result.box.width, result.box.height);
+            this.data.x = (result.box.x + result.box.width/2).toFixed(2);
+            this.data.y = (result.box.y + result.box.height/2).toFixed(2);
+        }
+    }
+
+    clearData = () => {
+    }
 }
 
 class SoundDetector extends BaseDetector {
-    constructor(canvasId, audioStream, audioContext) {
-        super(canvasId);
+    constructor(audioStream, audioContext) {
+        super();
         console.log("new SoundDetector!!");
         this.data = new StreamDetectingData();
         this.audioStream = audioStream;
@@ -53,27 +134,39 @@ class SoundDetector extends BaseDetector {
         this.script.onaudioprocess = this.updateData.bind(this);
         this.padding = 5;
         this.connectToSource();
-        this.loadImage();
     }
 
-    loadImage = () => {
-        this.img = document.getElementById('sound-image');
-        window.ctx = this.canvas.getContext('2d');
-        this.imgWidth = this.img.width;
-        this.imgHeight = this.img.height;
-        this.xPos = this.canvas.width - this.imgWidth - this.padding;
+    insert = async (chunk, controller) => {
+        try {
+            let metadata;
+            if (this.data.instant == 0) {
+                metadata = new ArrayBuffer (1);
+                const view = new DataView (metadata);
+                view.setUint8 (0, 0);
+            } else {
+                metadata = new ArrayBuffer (5);
+                const view = new DataView (metadata);
+                view.setFloat32 (0, this.data.instant);
+                view.setUint8 (4, 1);
+            }
+            const frame = chunk.data;
+            chunk.data = new ArrayBuffer(metadata.byteLength + chunk.data.byteLength);
+            const data = new Uint8Array (chunk.data);
+            data.set(new Uint8Array (frame), 0);
+            data.set (new Uint8Array (metadata), frame.byteLength);
+            controller.enqueue (chunk);
+        } catch (e) {
+            console.error (e);
+        }
     }
 
-    drawData = () => {
-        if (window.ctx == undefined) return;
-        window.ctx.clearRect(this.xPos, this.padding, this.imgWidth, this.imgHeight);
-        window.ctx.save();
-        window.ctx.fillStyle = "red";
-        window.ctx.fillRect(this.xPos, this.padding, this.imgWidth, this.imgHeight);
-        window.ctx.globalCompositeOperation = "destination-in";
-        window.ctx.globalAlpha = this.data.instant;
-        window.ctx.drawImage(this.img, this.xPos, this.padding, this.imgWidth, this.imgHeight);
-        window.ctx.restore();
+    addSenderStream = (senderStream)=>{
+        let readableStream = senderStream.readableStream;
+        let writableStream = senderStream.writableStream;
+        const transformStream = new TransformStream ({transform: this.insert});
+		readableStream
+				.pipeThrough (transformStream)
+				.pipeTo (writableStream);
     }
 
     connectToSource = () => {
@@ -91,7 +184,6 @@ class SoundDetector extends BaseDetector {
     updateData = (event) => {
         const input = event.inputBuffer.getChannelData(0);
         this.data.instant = (Math.max(...input) * 10).toFixed(2);
-        this.data.slow = 0.95 * this.data.slow + 0.05 * this.data.instant;
     }
 
     clearData = () => {
@@ -107,15 +199,25 @@ function detectingStart(detector) {
 
 var gDetector = null;
 class Detector {
-    constructor(audioContext) {
+    constructor(videoElement) {
         console.log('new Detector!!');
+        this.videoElement = videoElement;
+        this.faceDetector = null;
+        this.soundDetector = null;
         this.detectors = [];
-        this.audioContext = audioContext;
         this.timerId = null;
+        try {
+            let AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.audioContext = new AudioContext();
+        } catch (error) {
+            alert("Web Audio API not supported, name: " + error.name + ", message: " + error.message);
+        }
     }
 
     start() {
         console.log('start detectors');
+        this.addSoundDetector();
+        this.addFaceDetector();
         this.timerId = setInterval(detectingStart, 1000, this);
     }
 
@@ -126,44 +228,40 @@ class Detector {
             detector.clearData();
         });
     }
-
-    addSoundDetector = (canvasId, audioStream) => {
-        console.log('add sound detector:', canvasId);
-        this.detectors.push(new SoundDetector(canvasId, audioStream, this.audioContext));
+    
+    addSoundDetector = () => {
+        console.log('add sound detector');
+        this.soundDetector = new SoundDetector(this.videoElement.srcObject, this.audioContext);
+        this.detectors.push(this.soundDetector);
     }
 
-    removeStreamDetector = (canvasId) => {
-        let index = this.detectors.findIndex(detector => detector.canvasId == canvasId);
-        if (index >= 0) {
-            console.log("remove sound:", this.detectors[index].canvasId, index);
-            this.detectors.splice(index, 1);
-        }
+    addFaceDetector = () => {
+        console.log('add face detector');
+        this.faceDetector = new FaceDetector(this.videoElement);
+        this.detectors.push(this.faceDetector);
     }
 
     detecting() {
-        console.log('detectors:', this.detectors.length);
         this.detectors.forEach(function (detector) {
             detector.detecting();
-            detector.drawData();
         });
     }
 
-    static getDetector(...params) {
+    static getDetector(...args) {
         if (gDetector == null)
-            gDetector = new Detector(params[0]);
+            gDetector = new Detector(args[0]);
         return gDetector;
     }
 
-    static onStreamChanged(...args) {
-        let type = args[0];
-        console.log(args);
-        if (type === "connected") {
-            let canvasId = args[1];
-            let audioStream = args[2];
-            Detector.getDetector().addSoundDetector(canvasId, audioStream);        
-        } else if (type === "disconnected") {
-            let canvasId = args[1];
-            Detector.getDetector().removeStreamDetector(canvasId);
+    static addVideoSenderStream(senders) {
+        if (Detector.getDetector().faceDetector != null) {
+            Detector.getDetector().faceDetector.addSenderStream(senders);
+        }
+    }
+
+    static addAudioSenderStream(senders) {
+        if (Detector.getDetector().soundDetector != null) {
+            Detector.getDetector().soundDetector.addSenderStream(senders);
         }
     }
 }
