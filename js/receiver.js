@@ -219,7 +219,7 @@ class Receiver {
             if (maxSound == null) {
                 maxSound = receiver;
             }
-            if (maxSound.data.instant <= receiver.data.instant) {
+            if (maxSound.data.instant < receiver.data.instant) {
                 maxSound.data.isMax = false;
                 maxSound = receiver;
                 maxSound.data.isMax = true;
