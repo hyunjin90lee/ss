@@ -24,6 +24,7 @@ var Connection = function (me, peer, call) {
     this.addRemoteStream(peer);
 
     this.configuration = {
+        encodedInsertableStreams: true,
         iceServers: [
             {
                 urls: [
@@ -133,6 +134,12 @@ Connection.prototype.initConnection = async function() {
         if (track.kind == 'audio') this.audioSenders.push(this.peerConnection.addTrack(track));
         else this.videoSenders.push(this.peerConnection.addTrack(track));
     });
+    this.videoSenders.forEach(sender => {
+        Detector.addVideoSenderStream(sender.createEncodedStreams());
+    });
+    this.audioSenders.forEach(sender => {
+        Detector.addAudioSenderStream(sender.createEncodedStreams());
+    });
 
     /* it is triggered at its own setLocalDescription */
     this.peerConnection.addEventListener('icecandidate', event => {
@@ -147,10 +154,8 @@ Connection.prototype.initConnection = async function() {
     /* this is triggered at its setRemoteDescription */
     this.peerConnection.addEventListener('track', event => {
         this.remoteStream.addTrack(event.track);
-        if (event.track.kind == "video") return;
-        this.streamListeners.forEach(listener => {
-            listener("connected", this.remoteCanvas.id, this.remoteStream);
-        });
+        Receiver.onReceiveStream(event.track.kind, event.receiver.createEncodedStreams(),
+            this.remoteVideo, this.remoteVideoDiv.id, this.remoteInnerVideoDiv.id);
     });
 
     this.peerConnection.addEventListener('datachannel', event => {
@@ -181,22 +186,32 @@ Connection.prototype.addRemoteStream = function(peer) {
     canvas.style.zIndex   = 8;
     canvas.style.position = "absolute";
     //canvas.style.border   = "1px solid red";
-    canvas.width = "320"
-    canvas.height = "100"
+    canvas.width = "100%"
+    canvas.height = "30%"
 
     this.remoteCanvas = canvas;
 
-    var remotevideoDiv = document.createElement('div');
-    remotevideoDiv.id = `${video.id}-div`;
-    remotevideoDiv.classList.add('grid');
+    var innerDiv = document.createElement('div');
+    innerDiv.id = `${video.id}-inner-div`;
+    innerDiv.classList.add('inner-div');
 
-    videosDiv.append(remotevideoDiv);
+    innerDiv.append(video);
+    innerDiv.append(canvas);
+    innerDiv.append(div);
 
-    remotevideoDiv.append(div);
-    remotevideoDiv.append(canvas);
-    remotevideoDiv.append(video);
+    var remoteVideoDiv = document.createElement('div');
+    remoteVideoDiv.id = `${video.id}-div`;
+    remoteVideoDiv.style.position = "relative";
 
-    this.remoteVideoDiv = remotevideoDiv;
+    remoteVideoDiv.classList.add('grid');
+    remoteVideoDiv.classList.add('outer-div');
+
+    remoteVideoDiv.append(innerDiv);
+
+    videosDiv.append(remoteVideoDiv);
+
+    this.remoteVideoDiv = remoteVideoDiv;
+    this.remoteInnerVideoDiv = innerDiv;
     this.remoteVideo = video;
     this.remoteVideo.srcObject = this.remoteStream;
 
