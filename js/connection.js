@@ -155,7 +155,7 @@ Connection.prototype.initConnection = async function() {
     this.peerConnection.addEventListener('track', event => {
         this.remoteStream.addTrack(event.track);
         Receiver.onReceiveStream(event.track.kind, event.receiver.createEncodedStreams(),
-            this.remoteVideo, this.remoteVideoDiv.id, this.remoteInnerVideoDiv.id);
+            this.remoteVideo, this.remoteOuterVideoDiv.id, this.remoteInnerVideoDiv.id);
     });
 
     this.peerConnection.addEventListener('datachannel', event => {
@@ -185,9 +185,6 @@ Connection.prototype.addRemoteStream = function(peer) {
     canvas.id = `remotemonitor${peer}`;
     canvas.style.zIndex   = 8;
     canvas.style.position = "absolute";
-    //canvas.style.border   = "1px solid red";
-    canvas.width = "100%"
-    canvas.height = "30%"
 
     this.remoteCanvas = canvas;
 
@@ -199,21 +196,36 @@ Connection.prototype.addRemoteStream = function(peer) {
     innerDiv.append(canvas);
     innerDiv.append(div);
 
-    var remoteVideoDiv = document.createElement('div');
-    remoteVideoDiv.id = `${video.id}-div`;
-    remoteVideoDiv.style.position = "relative";
+    var remoteOuterVideoDiv = document.createElement('div');
+    remoteOuterVideoDiv.id = `${video.id}-outer-div`;
+    remoteOuterVideoDiv.style.position = "relative";
 
-    remoteVideoDiv.classList.add('grid');
-    remoteVideoDiv.classList.add('outer-div');
+    remoteOuterVideoDiv.classList.add('grid');
+    remoteOuterVideoDiv.classList.add('outer-div');
 
-    remoteVideoDiv.append(innerDiv);
+    remoteOuterVideoDiv.append(innerDiv);
 
-    videosDiv.append(remoteVideoDiv);
+    var remoteContainerDiv = document.createElement('div');
+    remoteContainerDiv.id = `${video.id}-container-div`;
+    remoteContainerDiv.append(remoteOuterVideoDiv);
+    div.append(canvas);
+    remoteContainerDiv.append(div);
 
-    this.remoteVideoDiv = remoteVideoDiv;
+    videosDiv.append(remoteContainerDiv);
+
+    this.remoteContainer = remoteContainerDiv;
+    this.remoteOuterVideoDiv = remoteOuterVideoDiv;
     this.remoteInnerVideoDiv = innerDiv;
     this.remoteVideo = video;
     this.remoteVideo.srcObject = this.remoteStream;
+
+    this.resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            canvas.width = entry.style.width;
+            canvas.height = entry.style.height;
+        }
+    });
+    this.resizeObserver.observe(this.remoteOuterVideoDiv);
 
     console.log('addRemoteStream: remotemonitor id',  canvas.id);
 }
@@ -377,8 +389,9 @@ Connection.prototype.hangup = async function () {
     this.remoteVideo.srcObject = null;
 
     const videosDiv = document.querySelector('#videos-div');
-    if (document.getElementById(this.remoteVideoDiv.id)) {
-        videosDiv.removeChild(this.remoteVideoDiv);
+    if (document.getElementById(this.remoteContainer.id)) {
+        videosDiv.removeChild(this.remoteContainer);
+        this.resizeObserver.unobserve(this.remoteOuterVideoDiv);
     }
 
     await this.deleteDB();

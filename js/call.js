@@ -100,8 +100,8 @@ Call.prototype.gotMediaStream = function(streams) {
     }
     this.localStream = streams; // make stream available to console
     this.localVideo.srcObject = streams;
-    this.localVideo.width = streams.getVideoTracks()[0].getSettings().width;
-    this.localVideo.height = streams.getVideoTracks()[0].getSettings().height;
+    this.localVideo.width = streams.getVideoTracks()[0].getSettings().width * 0.5;
+    this.localVideo.height = streams.getVideoTracks()[0].getSettings().height * 0.5;
     Detector.getDetector(this.localVideo).start();
     this.localStream.getVideoTracks()[0].addEventListener('ended', () => {
         Detector.getDetector().stop();

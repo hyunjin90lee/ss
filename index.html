@@ -80,9 +80,9 @@
       <div id="local-container-div" class="bottom-right">
         <div id="local-div" style="position: relative;">
           <div id="localvideoName" style="color: yellow"></div>
-          <canvas id="localmonitor" class="monitor" width="320" height="210"></canvas>
-          <canvas id="systemmonitor" class="system-monitor" width="320" height="30"></canvas>
-          <video id="localvideo" style="width: 50%; height: 50%;" autoplay playsinline muted></video>
+          <canvas id="localmonitor" class="monitor" width="320" height="210" style="position: absolute; z-index: 10;"></canvas>
+          <canvas id="systemmonitor" class="system-monitor" width="320" height="30" style="position: absolute; z-index: 11;"></canvas>
+          <video id="localvideo" autoplay playsinline muted></video>
         </div>
       </div>
     </div>

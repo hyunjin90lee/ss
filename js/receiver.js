@@ -17,7 +17,7 @@ class SoundReceivingData extends DetectingData {
     }
 
     toString() {
-        return "size: " + this.size + ", x: " + this.x + ", y: " + this.y;
+        return "instant: " + this.instant + ", isMax: " + this.isMax;
     }
 }
 
@@ -131,7 +131,7 @@ class SoundReceiver extends BaseReceiver {
         this.videoElement = videoElement;
         this.outerDiv = document.querySelector("#" + outerId);
         this.innerDiv = document.querySelector("#" + innerId);
-        this.data = null;
+        this.data = new SoundReceivingData();
         const transformStream = new TransformStream ({transform: this.extract});
 		this.readableStream
 				.pipeThrough (transformStream)
@@ -144,7 +144,6 @@ class SoundReceiver extends BaseReceiver {
     }
 
     drawData = () => {
-        if (this.data == null) return;
         if (this.data.isMax) {
             this.changeClass(this.outerDiv, 'outer-div2', 'outer-div');
             this.changeClass(this.innerDiv, 'inner-div2', 'inner-div');
@@ -160,7 +159,6 @@ class SoundReceiver extends BaseReceiver {
             const last = view.getUint8 (chunk.data.byteLength-1);
             if (last)
             {
-                this.data = new SoundReceivingData();
                 this.data.instant = view.getFloat32 (chunk.data.byteLength-5);
             }
             chunk.data = chunk.data.slice(0,chunk.data.byteLength - (last ? 5 : 1));
@@ -213,13 +211,13 @@ class Receiver {
     findMaxSound() {
         let maxSound = null;
         this.receivers.forEach(receiver=>{
-            if (typeof(receiver) !== SoundReceiver) {
+            if (receiver.constructor.name.localeCompare("SoundReceiver") !== 0) {
                 return;
             }
             if (maxSound == null) {
                 maxSound = receiver;
             }
-            if (maxSound.data.instant < receiver.data.instant) {
+            if (maxSound.data.instant <= receiver.data.instant) {
                 maxSound.data.isMax = false;
                 maxSound = receiver;
                 maxSound.data.isMax = true;
