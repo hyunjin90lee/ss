@@ -90,10 +90,14 @@ class SystemMonitor extends BaseMonitor {
     }
 
     async monitoringMemoryUsage() {
-        if (performance.measureMemory) {
+        if (performance.measureMemory || performance.measureUserAgentSpecificMemory) {
             let result;
             try {
-                result = await performance.measureMemory();
+                if (performance.measureMemory) {
+                    result = await performance.measureMemory();
+                } else if (performance.measureUserAgentSpecificMemory) {
+                    result = await performance.measureUserAgentSpecificMemory();
+                }
             } catch (error) {
                 if (error instanceof DOMException &&
                     error.name === "SecurityError") {
@@ -103,7 +107,7 @@ class SystemMonitor extends BaseMonitor {
                 }
             }
             this.data.memoryUsage = result.bytes / (1024 * 1024);
-            //console.log('mem:', this.data.memoryUsage);
+            console.log('mem:', this.data.memoryUsage);
         }
     }
 }
@@ -138,6 +142,7 @@ class StreamMonitor extends BaseMonitor {
                     this.data.videoWidth = report.frameWidth;
                     this.data.videoHeight = report.frameHeight;
                     this.data.fps = report.framesPerSecond;
+                    console.log('fps:', this.data.fps);
                 }
             } else if (report.id.indexOf("RTCInboundRTPAudioStream") >= 0 ||
                 report.id.indexOf("RTCOutboundRTPAudioStream") >= 0) {
@@ -206,10 +211,10 @@ class Monitor {
     }
 
     monitoring() {
-        console.log('video monitors:', this.monitors.length);
+        //console.log('video monitors:', this.monitors.length);
         this.monitors.forEach(function (monitor) {
             monitor.monitoring();
-            monitor.drawData();
+            //monitor.drawData();
         });
     }
 
