@@ -74,6 +74,10 @@ class BaseMonitor {
     monitoring() {
         return;
     }
+
+    getCanvasId() {
+        return this.canvasId;
+    }
 }
 
 class SystemMonitor extends BaseMonitor {
@@ -143,7 +147,8 @@ class StreamMonitor extends BaseMonitor {
                     this.data.videoWidth = report.frameWidth;
                     this.data.videoHeight = report.frameHeight;
                     this.data.fps = report.framesPerSecond;
-                    console.log('fps:', this.data.fps);
+                    console.log(super.getCanvasId(), ' - ', this.data.toString());
+                    //console.log(super.canvasId, ' - fps:', this.data.fps);
                 }
             } else if (report.id.indexOf("RTCInboundRTPAudioStream") >= 0 ||
                 report.id.indexOf("RTCOutboundRTPAudioStream") >= 0) {
@@ -211,8 +216,14 @@ class Monitor {
         }
     }
 
+    findStreamMonitor(canvasId) {
+        let index = this.monitors.findIndex(monitor => monitor.canvasId == canvasId);
+        if (index == -1) return false;
+        else return true;
+    }
+
     monitoring() {
-        //console.log('video monitors:', this.monitors.length);
+        console.log('video monitors:', this.monitors.length);
         this.monitors.forEach(function (monitor) {
             monitor.monitoring();
             //monitor.drawData();
@@ -232,9 +243,9 @@ class Monitor {
             let canvasId = args[1];
             let videoId = args[2];
             let peerConnection = args[3];
-            if (canvasId == "remotemonitor1") {
-                Monitor.getMonitor().addStreamMonitor("localmonitor", "localvideo", peerConnection, false);    
-            }
+            //if (Monitor.getMonitor().findStreamMonitor("localmonitor") == false) {
+              //  Monitor.getMonitor().addStreamMonitor("localmonitor", "localvideo", peerConnection, false);    
+            //}
             Monitor.getMonitor().addStreamMonitor(canvasId, videoId, peerConnection, true);
         
         } else if (type === "disconnected") {
