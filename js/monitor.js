@@ -102,6 +102,7 @@ class SystemMonitor extends BaseMonitor {
                 if (error instanceof DOMException &&
                     error.name === "SecurityError") {
                     console.log("The context is not secure.");
+                    return;
                 } else {
                     throw error;
                 }
