@@ -10,6 +10,7 @@ const optionDiv = document.querySelector('#option-div');
 const exitingDiv = document.querySelector('#exiting-div');
 const qrReaderDiv = document.querySelector('#reader');
 const captionDiv = document.querySelector('#caption-div');
+const performanceDiv = document.querySelector('#performance-div');
 const userUl = document.querySelector("#userList");
 const userSt = document.querySelector('#select');
 const qrImg = document.querySelector('.qr-div img');
@@ -55,6 +56,7 @@ AppController.prototype.init = function() {
     this.leaveButton = document.querySelector('#leave-dialog-btn');
     this.returnButton = document.querySelector('#return-meeting-btn');
     this.enableMonitorCheck = document.querySelector('#enable-monitor');
+    this.showMonitorCheck = document.querySelector('#show-monitor');
     this.captionButton = document.querySelector('#caption');
     this.localVideo = document.querySelector('#localvideo');
 
@@ -86,6 +88,13 @@ AppController.prototype.init = function() {
             Monitor.getMonitor().stop();
         }
     });
+    this.showMonitorCheck.addEventListener('change', function() {
+        if (this.checked) {
+            performanceDiv.classList.remove('hidden');
+        } else {
+            performanceDiv.classList.add('hidden');
+        }
+    })
     this.chatSendButton.addEventListener('click', this.sendChatMessage.bind(this));
 
     this.userButton = document.querySelector('.user-btn');

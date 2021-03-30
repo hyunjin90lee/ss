@@ -361,3 +361,15 @@ li:hover:not(.active) {
 #caption.on span {
   background: green;
 }
+
+#performance-div {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+  width: 60%;
+  height: 20%;
+  z-index: 9;
+  background-color: grey;
+  border: 1px solid black;
+  font-size: small;
+}

@@ -293,7 +293,7 @@ Connection.prototype.registerPeerConnectionListeners = function() {
         console.log(`[${this.pcName}] Connection state change: ${this.peerConnection.connectionState}`);
         if (this.peerConnection.connectionState == "connected") {
             this.stateListeners.forEach(listener => {
-                listener("connected", this.remoteCanvas.id, this.remoteVideo.id, this.peerConnection);
+                listener("connected", this.remoteCanvas.id, this.remoteVideo.id, this.peerConnection, this.pcName);
             });
         }
         if (this.peerConnection.connectionState == "disconnected") {

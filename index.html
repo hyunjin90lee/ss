@@ -66,6 +66,8 @@
       <button id="disconnectButton">Disconnect</button>
       <input type="checkbox" id="enable-monitor" unchecked/>
       <label for="enable-monitor">enable performance monitor</label>
+      <input type="checkbox" id="show-monitor" unchecked/>
+      <label for="show-monitor">show it</label>
     </div>
     <div id="preview-div" class="hidden row">
       <div id="call-config" class="column">
@@ -91,6 +93,7 @@
       <span id="interim_span"></span>
     </div>
     <button id="caption" class='hidden'> CC <span></span></button>
+    <div id="performance-div" style="overflow:scroll; "class='hidden'></div>
     <div id="errorMsg"></div>
     <dialog id="remote-dialog">
       <h3>Hello there! 👋</h3>
