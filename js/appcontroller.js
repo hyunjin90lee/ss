@@ -3,6 +3,7 @@
 const loginDiv = document.querySelector('#login-div');
 const activeDiv = document.querySelector('#active-div');
 const videosDiv = document.querySelector('#videos-div');
+const localvideoDiv = document.querySelector('#localvideo-div');
 const localvideoName = document.querySelector('#localvideoName');
 const roomSelectionDiv = document.querySelector('#room-selection');
 const previewDiv = document.querySelector('#preview-div');
@@ -58,7 +59,6 @@ AppController.prototype.init = function() {
     this.enableMonitorCheck = document.querySelector('#enable-monitor');
     this.showMonitorCheck = document.querySelector('#show-monitor');
     this.captionButton = document.querySelector('#caption');
-    this.localVideo = document.querySelector('#localvideo');
 
     this.createButton.addEventListener('click', this.createRandomRoom.bind(this));
     this.targetRoom.addEventListener('input', this.checkTargetRoom.bind(this));
@@ -135,6 +135,16 @@ AppController.prototype.init = function() {
 
     Monitor.getMonitor().addSystemMonitor("systemmonitor", "localvideo");
     this.call_.addStateListener(Monitor.onStateChanged);
+
+    try {
+        if (this.audioContext != undefined) return;
+        let AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.audioContext = new AudioContext();
+        Detector.getDetector(this.audioContext);
+        this.call_.addStreamListener(Detector.onStreamChanged);
+    } catch (error) {
+        alert("Web Audio API not supported, name: " + error.name + ", message: " + error.message);
+    }
 }
 
 
@@ -227,7 +237,7 @@ AppController.prototype.joinRoom = async function() {
     this.show_(previewDiv);
     this.show_(activeDiv);
     this.infoBox_.loginRoomMessage(this.isHost, this.roomId);
-    Receiver.getReceiver().start();
+    Detector.getDetector().start();
 
     return true;
 }
@@ -344,7 +354,6 @@ AppController.prototype.hangup = async function() {
     this.exitDialog.close();
     this.hideMeetingRoom();
     this.showLoginMenu();
-    Receiver.getReceiver().stop();
     Detector.getDetector().stop();
 }
 
