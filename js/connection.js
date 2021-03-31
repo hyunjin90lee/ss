@@ -298,7 +298,7 @@ Connection.prototype.registerPeerConnectionListeners = function() {
         }
         if (this.peerConnection.connectionState == "disconnected") {
             this.stateListeners.forEach(listener => {
-                listener("disconnected", this.remoteCanvas.id);
+                listener("disconnected", this.remoteCanvas.id, this.pcName);
             });
             //noticeInfo.innerHTML = 'Peer disconnected!! '
         }

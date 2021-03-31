@@ -307,10 +307,12 @@ class Monitor {
         this.monitors.push(new StreamMonitor(canvasId, videoId, peerConnection, isRemote, pcName));
     }
 
-    removeStreamMonitor(canvasId) {
-        let index = this.monitors.findIndex(monitor => monitor.canvasId == canvasId);
-        if (index >= 0) {
-            console.log("remove monitor:", this.monitors[index].canvasId, index);
+    removeStreamMonitor(canvasId, pcName) {
+        while(true) {
+            let index = this.monitors.findIndex(monitor=> monitor.pcName == pcName);
+            if (index < 0)
+                break;
+            console.log(pcName, " remove monitor: ", this.monitors[index].canvasId, index);
             this.monitors.splice(index, 1);
         }
     }
@@ -348,7 +350,8 @@ class Monitor {
         
         } else if (type === "disconnected") {
             let canvasId = args[1];
-            Monitor.getMonitor().removeStreamMonitor(canvasId);
+            let pcName = args[2];
+            Monitor.getMonitor().removeStreamMonitor(canvasId, pcName);
         }
     }
 }
