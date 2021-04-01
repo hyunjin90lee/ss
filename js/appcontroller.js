@@ -135,7 +135,7 @@ AppController.prototype.init = function() {
 
     Monitor.getMonitor().addSystemMonitor("systemmonitor", "localvideo");
     this.call_.addStateListener(Monitor.onStateChanged);
-/*
+
     try {
         if (this.audioContext != undefined) return;
         let AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -144,7 +144,7 @@ AppController.prototype.init = function() {
         this.call_.addStreamListener(Detector.onStreamChanged);
     } catch (error) {
         alert("Web Audio API not supported, name: " + error.name + ", message: " + error.message);
-    }*/
+    }
 }
 
 
@@ -237,7 +237,7 @@ AppController.prototype.joinRoom = async function() {
     this.show_(previewDiv);
     this.show_(activeDiv);
     this.infoBox_.loginRoomMessage(this.isHost, this.roomId);
-    //Detector.getDetector().start();
+    Detector.getDetector().start();
 
     return true;
 }
@@ -354,7 +354,7 @@ AppController.prototype.hangup = async function() {
     this.exitDialog.close();
     this.hideMeetingRoom();
     this.showLoginMenu();
-    //Detector.getDetector().stop();
+    Detector.getDetector().stop();
 }
 
 AppController.prototype.resource_free = async function () {
