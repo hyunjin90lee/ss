@@ -5,15 +5,25 @@ var Call = function (appController) {
     console.log("new Call!");
 
     this.localVideo = document.querySelector('#localvideo');
+    this.localVideoContainer = document.querySelector('#local-container-div');
 
     this.appController_ = appController;
     this.pc_ = [];
     this.stateListeners_ = [];
-    this.streamListeners_ = [];
+    this.constraint_ = {
+        video: {
+            width: { max: 640 },
+            height: { max: 480 },
+        },
+        audio: {
+            sampleSize: 16,
+            channelCount: 2,
+            echoCancellation: true,
+        }};
 }
 
 Call.prototype.receiveMessage = function(event) {
-    console.log("receiveMessage: " + event.data);// + this.targetFile['name'] + "-" + this.targetFile['size'] + "/" + this.receivedSize );
+    console.log("receiveMessage: " + event.data);
     this.appController_.receiveMessage(event.data);
 }
 
@@ -39,24 +49,23 @@ Call.prototype.addStateListener = function(listener) {
     this.stateListeners_.push(listener);
 }
 
-Call.prototype.addStreamListener = function(listener) {
-    this.streamListeners_.push(listener);
-}
-
 Call.prototype.onConnectDevice = function() {
     if (this.localStream) {
         this.localStream.getTracks().forEach(track => { track.stop(); });
     }
-    return navigator.mediaDevices.getUserMedia({video:true, audio:true})
-        .then(this.gotUserMediaStream.bind(this)).catch((error) => {
+    return navigator.mediaDevices.getUserMedia(this.constraint_)
+        .then(this.gotMediaStream.bind(this)).catch((error) => {
             console.log("[Error] failed to get media, name: " + error.name + ", message: " + error.message);
             return false;
         });
 }
 
 Call.prototype.onShareScreen = function() {
-    return navigator.mediaDevices.getDisplayMedia({video:true, audio:true})
-    .then(this.gotDisplayMediaStream.bind(this), (error) => {
+    if (this.localStream) {
+        this.localStream.getTracks().forEach(track => { track.stop(); });
+    }
+    return navigator.mediaDevices.getDisplayMedia(this.constraint_)
+    .then(this.gotMediaStream.bind(this), (error) => {
         console.log("[Error] failed to share screen:, name: " + error.name + ", message: " + error.message);
         return false;
     });
@@ -85,27 +94,17 @@ Call.prototype.handleMediaOptions = function(type, value) {
     }
 }
 
-Call.prototype.gotUserMediaStream = function(streams) {
+Call.prototype.gotMediaStream = function(streams) {
     if (this.localStream) {
         this.localStream.getTracks().forEach(track => { track.stop(); });
     }
-
     this.localStream = streams; // make stream available to console
     this.localVideo.srcObject = streams;
-
-    return true;
-}
-
-Call.prototype.gotDisplayMediaStream = function(streams) {
-    if (this.localStream) {
-        this.localStream.getTracks().forEach(track => { track.stop(); });
-    }
-    
-    this.localStream = streams; // make stream available to console
-    this.localVideo.srcObject = streams;
+    this.localVideo.width = streams.getVideoTracks()[0].getSettings().width * 0.5;
+    this.localVideo.height = streams.getVideoTracks()[0].getSettings().height * 0.5;
+    Detector.getDetector(this.localVideo).start();
     this.localStream.getVideoTracks()[0].addEventListener('ended', () => {
-        /*shareButton.disabled = false;*/
-        this.onConnectDevice();
+        Detector.getDetector().stop();
     });
     return true;
 }
@@ -114,9 +113,6 @@ Call.prototype.addPeerConnection = async function (me, peer) {
     let connection = new Connection(me, peer, this);
     this.stateListeners_.forEach(listener => {
         connection.addStateListener(listener);
-    });
-    this.streamListeners_.forEach(listener => {
-        connection.addStreamListener(listener);
     });
     await connection.initConnection();
 

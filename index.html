@@ -69,19 +69,6 @@
       <input type="checkbox" id="show-monitor" unchecked/>
       <label for="show-monitor">show it</label>
     </div>
-
-    <div id="videos-div" class="hidden">
-      <div id="localvideo-div" class="grid" style="border: solid 2px yellow;">
-        <div id="localvideoName" style="color: yellow"></div>
-        <canvas id="localmonitor" class="monitor" width="320" height="210"></canvas>
-        <canvas id="systemmonitor" class="system-monitor" width="320" height="30"></canvas>
-        <video id="localvideo" width="320" height ="240" poster="https://eitrawmaterials.eu/wp-content/uploads/2016/09/person-icon.png" autoplay playsinline muted></video>
-      </div>
-      <div style="display:none;">
-        <img id="sound-image" width="32" height="32"
-             src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Speaker_Icon.svg/600px-Speaker_Icon.svg.png">
-      </div>
-    </div>
     <div id="preview-div" class="hidden row">
       <div id="call-config" class="column">
         <button id="connect-device">Connect to Device</button>
@@ -89,6 +76,16 @@
       </div>
       <div class="column">
         <button id="meet-now" disabled>Meet Now</button>
+      </div>
+    </div>
+    <div id="videos-div" class="hidden">
+      <div id="local-container-div" class="bottom-right">
+        <div id="local-div" style="position: relative;">
+          <div id="localvideoName" style="color: yellow"></div>
+          <canvas id="localmonitor" class="monitor" width="320" height="210" style="position: absolute; z-index: 10;"></canvas>
+          <canvas id="systemmonitor" class="system-monitor" width="320" height="30" style="position: absolute; z-index: 11;"></canvas>
+          <video id="localvideo" autoplay playsinline muted></video>
+        </div>
       </div>
     </div>
     <div id="caption-div" class='hidden'>
@@ -134,8 +131,10 @@
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
   <script src="lib/html5-qrcode.min.js"></script>
+  <script src="lib/face-api.min.js"></script>
   <script src="js/monitor.js"></script>
   <script src="js/detector.js"></script>
+  <script src="js/receiver.js"></script>
   <script src="js/appcontroller.js"></script>
   <script src="js/call.js"></script>
   <script src="js/connection.js"></script>
